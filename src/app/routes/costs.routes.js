@@ -1,8 +1,8 @@
 const express = require("express");
-const costsRoutes = require("./costs.routes");
+const { addCost } = require("../controllers/costs.controller");
 
 const router = express.Router();
 
-router.use("/", costsRoutes);
+router.post("/add", addCost);
 
 module.exports = router;

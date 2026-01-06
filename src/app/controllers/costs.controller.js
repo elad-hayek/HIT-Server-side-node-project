@@ -1,4 +1,4 @@
-const Cost = require("../../models/cost.model");
+const { createCost } = require("../services/costs.service");
 const { AppError } = require("../../errors/app_error");
 
 async function addCost(req, res, next) {
@@ -9,7 +9,7 @@ async function addCost(req, res, next) {
       throw new AppError("Missing required fields", 400);
     }
 
-    const cost = await Cost.create({
+    const cost = await createCost({
       description,
       category,
       userid,

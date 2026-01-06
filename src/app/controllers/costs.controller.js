@@ -1,4 +1,7 @@
-const { createCost } = require("../services/costs.service");
+const {
+  createCost,
+  getMonthlyReport: getMonthlyReportService,
+} = require("../services/costs.service");
 const { AppError } = require("../../errors/app_error");
 
 async function addCost(req, res, next) {
@@ -22,6 +25,27 @@ async function addCost(req, res, next) {
   }
 }
 
+async function getMonthlyReport(req, res, next) {
+  try {
+    const { userid, year, month } = req.query;
+
+    if (!userid || !year || !month) {
+      throw new AppError("Missing required query parameters", 400);
+    }
+
+    const report = await getMonthlyReportService({
+      userid,
+      year,
+      month,
+    });
+
+    res.status(200).json(report);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   addCost,
+  getMonthlyReport,
 };

@@ -12,8 +12,35 @@ async function createCost({ description, category, userid, sum }) {
 }
 
 async function getMonthlyReport({ userid, year, month }) {
-  // implementation will be added later
-  return null;
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 1);
+
+  const report = await Cost.aggregate([
+    {
+      $match: {
+        userid: Number(userid),
+        createdAt: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$category",
+        total: { $sum: "$sum" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        category: "$_id",
+        total: 1,
+      },
+    },
+  ]);
+
+  return report;
 }
 
 module.exports = {

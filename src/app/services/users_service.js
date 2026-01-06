@@ -65,7 +65,7 @@ const getAllUsers = async function (requestId) {
 };
 
 const getUserById = async function (id, requestId) {
-  const userId = Number(id);
+  const userId = parseInt(id, 10);
   
   if (isNaN(userId)) {
     throw new ValidationError("Invalid user id");

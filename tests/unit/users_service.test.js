@@ -1,7 +1,6 @@
 // Users service tests
 jest.mock("../../src/app/repositories/users_repository");
 jest.mock("../../src/clients/costs_client");
-jest.mock("../../src/logging");
 
 const usersService = require("../../src/app/services/users_service");
 const usersRepository = require("../../src/app/repositories/users_repository");

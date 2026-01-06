@@ -1,4 +1,5 @@
 const Cost = require("../../models/cost.model");
+const MonthlyReport = require("../../models/monthlyReport.model");
 
 async function createCost({ description, category, userid, sum }) {
   const cost = await Cost.create({
@@ -12,6 +13,18 @@ async function createCost({ description, category, userid, sum }) {
 }
 
 async function getMonthlyReport({ userid, year, month }) {
+  // 1️⃣ בדיקת Cache
+  const cachedReport = await MonthlyReport.findOne({
+    userid: Number(userid),
+    year: Number(year),
+    month: Number(month),
+  });
+
+  if (cachedReport) {
+    return cachedReport.data;
+  }
+
+  // 2️⃣ חישוב הדוח (Aggregation)
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 1);
 
@@ -39,6 +52,14 @@ async function getMonthlyReport({ userid, year, month }) {
       },
     },
   ]);
+
+  // 3️⃣ שמירת Cache
+  await MonthlyReport.create({
+    userid: Number(userid),
+    year: Number(year),
+    month: Number(month),
+    data: report,
+  });
 
   return report;
 }

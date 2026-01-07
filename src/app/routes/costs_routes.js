@@ -2,7 +2,7 @@ const express = require("express");
 const {
   addCost,
   getMonthlyReport,
-} = require("../controllers/costs.controller");
+} = require("../controllers/costs_controller");
 
 const router = express.Router();
 

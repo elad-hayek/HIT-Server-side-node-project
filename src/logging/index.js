@@ -1,6 +1,8 @@
 // Pino logger configuration with MongoDB stream
 const pino = require("pino");
 const createMongoStream = require("./mongo-stream");
+const loggingClient = require("../clients/logging_client");
+
 
 // Create a multi-stream logger that writes to both console and MongoDB
 const loggerServiceLogger = pino(
@@ -21,7 +23,6 @@ const loggerServiceLogger = pino(
   ])
 );
 
-const loggingClient = require("../clients/logging_client");
 
 // Custom stream to send logs to REST API via loggingClient
 const customStream = {
@@ -40,4 +41,6 @@ const customStream = {
 
 const logger = pino({}, customStream);
 
-module.exports = logger;
+module.exports.logger = logger;
+module.exports.loggerServiceLogger = loggerServiceLogger;
+

@@ -1,6 +1,6 @@
 // HTTP logger middleware using pino-http
 const pinoHttp = require("pino-http");
-const logger = require("../../logging");
+const {logger} = require("../../logging");
 // Removed direct loggingClient usage; logging handled by main logger
 
 const httpLogger = pinoHttp({

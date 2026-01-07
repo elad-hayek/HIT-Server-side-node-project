@@ -1,10 +1,10 @@
 // Unit tests for GET /api/logs endpoint
 const request = require("supertest");
 const createApp = require("../../src/app/app");
-const logsService = require("../../src/services/log.service");
+const logsService = require("../../src/app/services/log_service");
 
 // Mock the logs service so we don't need a real database
-jest.mock("../../src/services/log.service");
+jest.mock("../../src/app/services/log_service");
 
 // Create the app instance for testing
 const app = createApp();

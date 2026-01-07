@@ -1,5 +1,5 @@
 // Logs service - business logic for logs operations
-const Log = require("../db/models/log");
+const Log = require("../../db/models/log.model");
 
 // Get all logs from database
 async function getAllLogs() {

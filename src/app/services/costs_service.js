@@ -1,5 +1,5 @@
-const Cost = require("../../models/cost.model");
-const MonthlyReport = require("../../models/monthlyReport.model");
+const Cost = require("../../db/models/cost.model");
+const MonthlyReport = require("../../db/models/monthlyReport.model");
 
 async function createCost({ description, category, userid, sum }) {
   const cost = await Cost.create({

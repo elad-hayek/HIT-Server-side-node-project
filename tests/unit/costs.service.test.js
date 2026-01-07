@@ -1,9 +1,9 @@
-const Cost = require("../../src/models/cost.model");
-const MonthlyReport = require("../../src/models/monthlyReport.model");
-const { getMonthlyReport } = require("../../src/app/services/costs.service");
+const Cost = require("../../src/db/models/cost.model");
+const MonthlyReport = require("../../src/db/models/monthlyReport.model");
+const { getMonthlyReport } = require("../../src/app/services/costs_service");
 
-jest.mock("../../src/models/cost.model");
-jest.mock("../../src/models/monthlyReport.model");
+jest.mock("../../src/db/models/cost.model");
+jest.mock("../../src/db/models/monthlyReport.model");
 
 beforeEach(() => {
   jest.clearAllMocks();

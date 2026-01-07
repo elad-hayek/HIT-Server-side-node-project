@@ -1,7 +1,7 @@
 const {
   createCost,
   getMonthlyReport: getMonthlyReportService,
-} = require("../services/costs.service");
+} = require("../services/costs_service");
 const { AppError } = require("../../errors/app_error");
 
 async function addCost(req, res, next) {

@@ -1,7 +1,7 @@
 // Users service - business logic layer
 const usersRepository = require("../repositories/users_repository");
 const costsClient = require("../../clients/costs_client");
-const logger = require("../../logging");
+const {logger} = require("../../logging");
 const { ValidationError } = require("../../errors/validation_error");
 const { NotFoundError } = require("../../errors/not_found_error");
 const { DuplicateError } = require("../../errors/duplicate_error");

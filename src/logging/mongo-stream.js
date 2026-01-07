@@ -1,4 +1,4 @@
-const Log = require("../db/models/log");
+const Log = require("../db/models/log.model");
 
 function createMongoStream() {
     return {

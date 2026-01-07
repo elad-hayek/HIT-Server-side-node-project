@@ -1,7 +1,7 @@
 // HTTP logger middleware using pino-http
 const pinoHttp = require("pino-http");
 const logger = require("../../logging");
-const loggingClient = require("../../clients/logging_client");
+// Removed direct loggingClient usage; logging handled by main logger
 
 const httpLogger = pinoHttp({
   logger,
@@ -22,31 +22,7 @@ const httpLogger = pinoHttp({
 });
 
 const loggingMiddleware = function (req, res, next) {
-  const startTime = Date.now();
-  
-  loggingClient.logRequest({
-    method: req.method,
-    url: req.url,
-    headers: req.headers,
-    query: req.query,
-    request_id: req.id || req.headers["x-request-id"],
-  });
-  
-  const originalSend = res.send;
-  res.send = function (data) {
-    const duration = Date.now() - startTime;
-    
-    loggingClient.logResponse({
-      method: req.method,
-      url: req.url,
-      status: res.statusCode,
-      duration,
-      request_id: req.id || req.headers["x-request-id"],
-    });
-    
-    originalSend.call(this, data);
-  };
-  
+  // Only use pino-http for logging; custom logic moved to main logger
   httpLogger(req, res, next);
 };
 

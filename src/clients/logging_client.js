@@ -11,12 +11,16 @@ const sendLogToService = async function (logData) {
   }
 
   try {
-    await axios.post(`${config.LOGGING_SERVICE_URL}/logs`, logData, {
-      timeout: config.LOGGING_SERVICE_TIMEOUT,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // TODO: elad - send the log to the logging service
+    console.log("Log sent to logging service:", logData);
+
+    // await axios.post(`${config.LOGGING_SERVICE_URL}/logs`, logData, {
+    //   timeout: config.LOGGING_SERVICE_TIMEOUT,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
+
   } catch (error) {
     console.error("Failed to send log to logging service:", error.message);
   }
@@ -59,12 +63,14 @@ const queueLog = function (logData) {
   }
 };
 
-const createLog = function (level, message, meta = {}) {
-  queueLog({
-    level,
-    message,
-    ...meta,
+const createLog = function (logData) {
+  sendLogToService({
+    ...logData,
+    timestamp: new Date().toISOString(),
   });
+
+  //TODO: elad - use the queue instead
+  // queueLog(logData);
 };
 
 module.exports = {

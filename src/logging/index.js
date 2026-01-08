@@ -26,19 +26,20 @@ const loggerServiceLogger = pino(
 const customStream = {
   write: (msg) => {
     try {
+      // console.clear()
+
       // Parse log message from pino (JSON string)
       const logObj = JSON.parse(msg);
-      const customData = logObj.req?.customLogData || {};
 
       // Send to logging service as 'custom' log
       loggingClient.createLog({
         level: logObj.level,
         message: logObj.msg,
         timestamp: new Date(logObj.time),
-        method: customData.method,
-        url: customData.url,
-        statusCode: customData.statusCode,
-        responseTime: customData.responseTime,
+        method: logObj.req?.method,
+        url: logObj.req?.url,
+        statusCode: logObj.res?.statusCode,
+        responseTime: logObj.responseTime,
       });
     } catch (err) {
       // Fallback: log error to console

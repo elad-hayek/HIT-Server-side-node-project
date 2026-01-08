@@ -21,22 +21,6 @@ const httpLogger = pinoHttp({
 });
 
 const loggingMiddleware = function (req, res, next) {
-  // Capture start time for response time calculation
-  const startTime = Date.now();
-
-  // Attach custom data to request object
-  req.customLogData = {
-    method: req.method,
-    url: req.url,
-    responseTime: null, // will be calculated on response
-  };
-
-  // Hook into response finish event to calculate response time
-  res.on("finish", () => {
-    req.customLogData.responseTime = Date.now() - startTime;
-    req.customLogData.statusCode = res.statusCode;
-  });
-
   httpLogger(req, res, next);
 };
 

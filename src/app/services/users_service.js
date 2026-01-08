@@ -36,6 +36,7 @@ const addUser = async function (userData, requestId) {
       last_name: validatedUser.last_name,
       birthday: validatedUser.birthday,
     });
+    
     logger.info({ userId: user.id, requestId }, "User created");
     
     return {
@@ -54,7 +55,6 @@ const addUser = async function (userData, requestId) {
 
 const getAllUsers = async function (requestId) {
   const users = await usersRepository.findAllUsers();
-  logger.info({ count: users.length, requestId }, "Users fetched");
   
   return users.map(user => ({
     id: user.id,
@@ -76,8 +76,6 @@ const getUserById = async function (id, requestId) {
   if (!user) {
     throw new NotFoundError(`User with id ${userId} not found`);
   }
-  
-  logger.info({ userId, requestId }, "User fetched");
   
   let totalCosts;
   try {

@@ -31,7 +31,7 @@ const customStream = {
       // Parse log message from pino (JSON string)
       const logObj = JSON.parse(msg);
       // Send to logging service as 'custom' log
-      loggingClient.logCustom(logObj.level, logObj.msg, logObj);
+      loggingClient.createLog(logObj.level, logObj.msg, logObj);
     } catch (err) {
       // Fallback: log error to console
       console.error("Failed to send log to logging service:", err.message);
@@ -39,8 +39,13 @@ const customStream = {
   },
 };
 
-const logger = pino({}, customStream);
+const logger = pino(
+  { level: "info" },
+  pino.multistream([
+    { level: "info", stream: process.stdout },
+    { level: "info", stream: customStream },
+  ])
+);
 
-module.exports.logger = logger;
-module.exports.loggerServiceLogger = loggerServiceLogger;
+module.exports =  {logger, loggerServiceLogger};
 

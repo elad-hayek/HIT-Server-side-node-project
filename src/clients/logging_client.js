@@ -59,23 +59,8 @@ const queueLog = function (logData) {
   }
 };
 
-const logRequest = function (requestData) {
+const createLog = function (level, message, meta = {}) {
   queueLog({
-    type: "request",
-    ...requestData,
-  });
-};
-
-const logResponse = function (responseData) {
-  queueLog({
-    type: "response",
-    ...responseData,
-  });
-};
-
-const logCustom = function (level, message, meta = {}) {
-  queueLog({
-    type: "custom",
     level,
     message,
     ...meta,
@@ -83,7 +68,5 @@ const logCustom = function (level, message, meta = {}) {
 };
 
 module.exports = {
-  logRequest,
-  logResponse,
-  logCustom,
+  createLog,
 };

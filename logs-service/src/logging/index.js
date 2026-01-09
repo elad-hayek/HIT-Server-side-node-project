@@ -1,26 +1,6 @@
 // Pino logger configuration with MongoDB stream
 const pino = require("pino");
-const createMongoStream = require("./mongo-stream");
-
-// Create a multi-stream logger that writes to both console and MongoDB
-// Note: Logs service does NOT send logs to itself to avoid infinite loops
-const loggerServiceLogger = pino(
-  {
-    level: "info",
-  },
-  pino.multistream([
-    // Stream 1: Write to console (pretty print in development)
-    {
-      level: "info",
-      stream: process.stdout,
-    },
-    // Stream 2: Write to MongoDB
-    {
-      level: "info",
-      stream: createMongoStream(),
-    },
-  ])
-);
+const Log = require("../db/models/log.model");
 
 // Custom stream to write directly to MongoDB (no external service call)
 const customStream = {
@@ -31,7 +11,6 @@ const customStream = {
 
       // In the logs service, we just log to MongoDB directly
       // No external HTTP calls to avoid infinite loops
-      const Log = require("../db/models/log.model");
 
       const logDoc = new Log({
         level: logObj.level,
@@ -61,4 +40,4 @@ const logger = pino(
   ])
 );
 
-module.exports = { logger, loggerServiceLogger };
+module.exports = { logger };

@@ -1,7 +1,7 @@
 // Logs controller - handles HTTP requests for logs endpoints
 
 const logsService = require("../services/log_service");
-const {loggerServiceLogger} = require("../../logging");
+const { loggerServiceLogger } = require("../../logging");
 
 async function getLogs(req, res) {
   try {

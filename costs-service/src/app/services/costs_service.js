@@ -13,6 +13,8 @@ const validateCostData = function (data) {
     throw new ValidationError(firstError.message);
   }
 
+  // TODO: check here if the userid exists in the users service
+
   return tempCost;
 };
 
@@ -105,6 +107,8 @@ const createCost = async function (costData, requestId) {
 };
 
 const getMonthlyReport = async function (params, requestId) {
+  // TODO: check if the month is in the future and throw error if right now allways do the aggregation and if in the
+  // past check cache first
   const { userid, year, month } = validateMonthlyReportParams(params);
 
   // Check cache first

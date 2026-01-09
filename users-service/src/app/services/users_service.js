@@ -81,7 +81,7 @@ const getUserById = async function (id, requestId) {
 
   let totalCosts;
   try {
-    totalCosts = await costsClient.getTotalCosts(userId, requestId);
+    totalCosts = await costsClient.getUserTotalCosts(userId, requestId);
   } catch (error) {
     if (
       error.code === "ECONNREFUSED" ||

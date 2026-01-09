@@ -350,11 +350,11 @@ describe("Costs Service", () => {
     });
   });
 
-  describe("getTotalCosts", () => {
+  describe("getUserTotalCosts", () => {
     it("should return total costs for a user", async () => {
       costsRepository.getCostsTotalByUserId.mockResolvedValue(1500);
 
-      const result = await costsService.getTotalCosts({ userId: 1 }, "req-123");
+      const result = await costsService.getUserTotalCosts({ userId: 1 }, "req-123");
 
       expect(costsRepository.getCostsTotalByUserId).toHaveBeenCalledWith(1);
       expect(result).toEqual({
@@ -366,7 +366,7 @@ describe("Costs Service", () => {
     it("should return zero when user has no costs", async () => {
       costsRepository.getCostsTotalByUserId.mockResolvedValue(0);
 
-      const result = await costsService.getTotalCosts({ userId: 5 }, "req-123");
+      const result = await costsService.getUserTotalCosts({ userId: 5 }, "req-123");
 
       expect(result).toEqual({
         userid: 5,
@@ -375,27 +375,27 @@ describe("Costs Service", () => {
     });
 
     it("should throw ValidationError when userId is missing", async () => {
-      await expect(costsService.getTotalCosts({}, "req-123")).rejects.toThrow(
+      await expect(costsService.getUserTotalCosts({}, "req-123")).rejects.toThrow(
         ValidationError
       );
     });
 
     it("should throw ValidationError when userId is not a number", async () => {
       await expect(
-        costsService.getTotalCosts({ userId: "not-a-number" }, "req-123")
+        costsService.getUserTotalCosts({ userId: "not-a-number" }, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
     it("should throw ValidationError when userId is null", async () => {
       await expect(
-        costsService.getTotalCosts({ userId: null }, "req-123")
+        costsService.getUserTotalCosts({ userId: null }, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
     it("should convert string userId to number", async () => {
       costsRepository.getCostsTotalByUserId.mockResolvedValue(800);
 
-      const result = await costsService.getTotalCosts(
+      const result = await costsService.getUserTotalCosts(
         { userId: "2" },
         "req-123"
       );

@@ -3,9 +3,9 @@ const axios = require("axios");
 const config = require("../config");
 const { logger } = require("../logging");
 
-const getTotalCosts = async function (userId, requestId) {
+const getUserTotalCosts = async function (userId, requestId) {
   const baseUrl = config.COSTS_SERVICE_URL;
-  const url = `${baseUrl}/internal/costs/total`;
+  const url = `${baseUrl}/user-total`;
 
   const headers = {};
   if (requestId) {
@@ -13,21 +13,12 @@ const getTotalCosts = async function (userId, requestId) {
   }
 
   try {
-    // TODO: elad - remove this is for tests
-    return 20;
-
-    logger.info({ userId, requestId }, "Calling costs-service");
 
     const response = await axios.get(url, {
       params: { userId },
       headers,
       timeout: config.COSTS_SERVICE_TIMEOUT,
     });
-
-    logger.info(
-      { userId, requestId, total: response.data.total_costs },
-      "Costs-service response received"
-    );
 
     return response.data.total_costs;
   } catch (error) {
@@ -40,5 +31,5 @@ const getTotalCosts = async function (userId, requestId) {
 };
 
 module.exports = {
-  getTotalCosts,
+  getUserTotalCosts,
 };

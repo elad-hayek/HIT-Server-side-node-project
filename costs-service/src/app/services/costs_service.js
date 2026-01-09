@@ -65,7 +65,7 @@ const validateMonthlyReportParams = function (params) {
   };
 };
 
-const validateTotalCostsParams = function (params) {
+const validateUserTotalCostsParams = function (params) {
   const { userId } = params;
 
   if (userId === undefined || userId === null) {
@@ -131,8 +131,8 @@ const getMonthlyReport = async function (params, requestId) {
   return report;
 };
 
-const getTotalCosts = async function (params, requestId) {
-  const userid = validateTotalCostsParams(params);
+const getUserTotalCosts = async function (params, requestId) {
+  const userid = validateUserTotalCostsParams(params);
 
   const total = await costsRepository.getCostsTotalByUserId(userid);
 
@@ -145,5 +145,5 @@ const getTotalCosts = async function (params, requestId) {
 module.exports = {
   createCost,
   getMonthlyReport,
-  getTotalCosts,
+  getUserTotalCosts,
 };

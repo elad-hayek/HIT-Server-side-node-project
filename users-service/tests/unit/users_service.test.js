@@ -220,12 +220,12 @@ describe("Users Service", () => {
       };
 
       usersRepository.findUserById.mockResolvedValue(user);
-      costsClient.getTotalCosts.mockResolvedValue(150.5);
+      costsClient.getUserTotalCosts.mockResolvedValue(150.5);
 
       const result = await usersService.getUserById("1", "req-123");
 
       expect(usersRepository.findUserById).toHaveBeenCalledWith(1);
-      expect(costsClient.getTotalCosts).toHaveBeenCalledWith(1, "req-123");
+      expect(costsClient.getUserTotalCosts).toHaveBeenCalledWith(1, "req-123");
       expect(result).toEqual({
         id: 1,
         first_name: "John",
@@ -261,7 +261,7 @@ describe("Users Service", () => {
 
       const error = new Error("connect ECONNREFUSED");
       error.code = "ECONNREFUSED";
-      costsClient.getTotalCosts.mockRejectedValue(error);
+      costsClient.getUserTotalCosts.mockRejectedValue(error);
 
       await expect(usersService.getUserById("1", "req-123")).rejects.toThrow(
         ServiceError
@@ -286,7 +286,7 @@ describe("Users Service", () => {
 
       const error = new Error("timeout");
       error.code = "ETIMEDOUT";
-      costsClient.getTotalCosts.mockRejectedValue(error);
+      costsClient.getUserTotalCosts.mockRejectedValue(error);
 
       await expect(usersService.getUserById("1", "req-123")).rejects.toThrow(
         ServiceError
@@ -314,7 +314,7 @@ describe("Users Service", () => {
         status: 400,
         statusText: "Bad Request",
       };
-      costsClient.getTotalCosts.mockRejectedValue(error);
+      costsClient.getUserTotalCosts.mockRejectedValue(error);
 
       await expect(usersService.getUserById("1", "req-123")).rejects.toThrow(
         ServiceError

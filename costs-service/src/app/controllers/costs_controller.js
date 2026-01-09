@@ -1,24 +1,14 @@
+// Costs controller - request/response handling
 const {
-  createCost,
+  createCost: createCostService,
   getMonthlyReport: getMonthlyReportService,
+  getTotalCosts: getTotalCostsService,
 } = require("../services/costs_service");
-const { AppError } = require("../../errors/app_error");
 
 async function addCost(req, res, next) {
   try {
-    const { description, category, userid, sum } = req.body;
-
-    if (!description || !category || !userid || !sum) {
-      throw new AppError("Missing required fields", 400);
-    }
-
-    const cost = await createCost({
-      description,
-      category,
-      userid,
-      sum,
-    });
-
+    const requestId = req.id || req.headers["x-request-id"];
+    const cost = await createCostService(req.body, requestId);
     res.status(201).json(cost);
   } catch (err) {
     next(err);
@@ -27,19 +17,19 @@ async function addCost(req, res, next) {
 
 async function getMonthlyReport(req, res, next) {
   try {
-    const { userid, year, month } = req.query;
-
-    if (!userid || !year || !month) {
-      throw new AppError("Missing required query parameters", 400);
-    }
-
-    const report = await getMonthlyReportService({
-      userid,
-      year,
-      month,
-    });
-
+    const requestId = req.id || req.headers["x-request-id"];
+    const report = await getMonthlyReportService(req.query, requestId);
     res.status(200).json(report);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getTotalCosts(req, res, next) {
+  try {
+    const requestId = req.id || req.headers["x-request-id"];
+    const totalCosts = await getTotalCostsService(req.query, requestId);
+    res.status(200).json(totalCosts);
   } catch (err) {
     next(err);
   }
@@ -48,4 +38,5 @@ async function getMonthlyReport(req, res, next) {
 module.exports = {
   addCost,
   getMonthlyReport,
+  getTotalCosts,
 };

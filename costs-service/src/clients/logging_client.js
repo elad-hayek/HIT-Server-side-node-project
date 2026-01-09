@@ -14,12 +14,12 @@ const sendLogToService = async function (logData) {
     // TODO: elad - send the log to the logging service
     console.log("Log sent to logging service:", logData);
 
-    await axios.post(`${config.LOGGING_SERVICE_URL}/logs`, logData, {
-      timeout: config.LOGGING_SERVICE_TIMEOUT,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // await axios.post(`${config.LOGGING_SERVICE_URL}/logs`, logData, {
+    //   timeout: config.LOGGING_SERVICE_TIMEOUT,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
   } catch (error) {
     console.error("Failed to send log to logging service:", error.message);
   }

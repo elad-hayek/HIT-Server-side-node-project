@@ -1,14 +1,10 @@
 const express = require("express");
-const {
-  addCost,
-  getMonthlyReport,
-  getTotalCosts: getUserTotalCosts,
-} = require("../controllers/costs_controller");
+const costsController = require("../controllers/costs_controller");
 
 const router = express.Router();
 
-router.post("/add", addCost);
-router.get("/report", getMonthlyReport);
-router.get("/user-total", getUserTotalCosts);
+router.post("/add", costsController.addCost);
+router.get("/report", costsController.getMonthlyReport);
+router.get("/user-total", costsController.getUserTotalCosts);
 
 module.exports = router;

@@ -13,6 +13,8 @@ async function createCost({ description, category, userid, sum }) {
 }
 
 async function getMonthlyReport({ userid, year, month }) {
+  // TODO: zohar - check if the user exists
+
   // 1️⃣ בדיקת Cache
   const cachedReport = await MonthlyReport.findOne({
     userid: Number(userid),

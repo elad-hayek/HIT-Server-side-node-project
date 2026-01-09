@@ -26,6 +26,7 @@ const loggerServiceLogger = pino(
 const customStream = {
   write: (msg) => {
     try {
+      // TODO: elad - remove 
       // console.clear()
 
       // Parse log message from pino (JSON string)

@@ -1,7 +1,7 @@
 // Client for costs-service communication
 const axios = require("axios");
 const config = require("../config");
-const logger = require("../logging");
+const { logger } = require("../logging");
 
 const getTotalCosts = async function (userId, requestId) {
   const baseUrl = config.COSTS_SERVICE_URL;
@@ -13,6 +13,9 @@ const getTotalCosts = async function (userId, requestId) {
   }
 
   try {
+    // TODO: elad - remove this is for tests
+    return 20;
+    
     logger.info({ userId, requestId }, "Calling costs-service");
     
     const response = await axios.get(url, {

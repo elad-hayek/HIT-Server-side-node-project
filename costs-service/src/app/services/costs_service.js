@@ -150,32 +150,94 @@ const createCost = async function (costData, requestId) {
 };
 
 const getMonthlyReport = async function (params, requestId) {
-  // TODO: check if the month is in the future and throw error if right now allways do the aggregation and if in the
-  // past check cache first
   const { userid, year, month } = validateMonthlyReportParams(params);
 
-  // Check cache first
-  const cachedReport = await costsRepository.getMonthlyReportFromCache(
-    userid,
-    year,
-    month
-  );
+  // Get current date
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // getMonth returns 0-11, we need 1-12
 
-  if (cachedReport) {
-    return cachedReport.data;
+  // Check if the requested date is current
+  const isCurrentMonth = year === currentYear && month === currentMonth;
+
+  // Check if the requested date is in the future
+  const isInFuture =
+    year > currentYear || (year === currentYear && month > currentMonth);
+
+  // Check if the requested date is in the past
+  const isInPast =
+    year < currentYear || (year === currentYear && month < currentMonth);
+
+  // If future date, return with 0 costs
+  if (isInFuture) {
+    logger.info(
+      { userid, year, month, requestId },
+      "Future month requested - returning 0 costs"
+    );
+    return {
+      userid,
+      year,
+      month,
+      costs: [],
+      total: 0,
+      message: "Future date requested. No costs available.",
+    };
   }
 
-  // Get fresh data via aggregation
-  const report = await costsRepository.getCostsByMonthAggregation(
-    userid,
-    year,
-    month
-  );
+  // If current month, always do the aggregation (fresh data)
+  if (isCurrentMonth) {
+    logger.info(
+      { userid, year, month, requestId },
+      "Current month requested - fetching fresh data"
+    );
+    const report = await costsRepository.getCostsByMonthAggregation(
+      userid,
+      year,
+      month
+    );
+    return report;
+  }
 
-  // Cache the report for future requests
-  await costsRepository.cacheMonthlyReport(userid, year, month, report);
+  // If past date, check cache first
+  if (isInPast) {
+    logger.info(
+      { userid, year, month, requestId },
+      "Past month requested - checking cache"
+    );
 
-  return report;
+    const cachedReport = await costsRepository.getMonthlyReportFromCache(
+      userid,
+      year,
+      month
+    );
+
+    if (cachedReport) {
+      logger.info(
+        { userid, year, month, requestId },
+        "Monthly report found in cache"
+      );
+      return cachedReport.data;
+    }
+
+    logger.info(
+      { userid, year, month, requestId },
+      "Monthly report not in cache - fetching from database"
+    );
+
+    // Get fresh data via aggregation
+    const report = await costsRepository.getCostsByMonthAggregation(
+      userid,
+      year,
+      month
+    );
+
+    // Cache the report for future requests
+    await costsRepository.cacheMonthlyReport(userid, year, month, report);
+
+    logger.info({ userid, year, month, requestId }, "Monthly report cached");
+
+    return report;
+  }
 };
 
 const getUserTotalCosts = async function (params, requestId) {

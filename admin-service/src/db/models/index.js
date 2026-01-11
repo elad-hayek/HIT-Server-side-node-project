@@ -1,6 +1,6 @@
 // Export all models
-// const User = require("./user.model");
+const ProjectMember = require("./project_member.model");
 
 module.exports = {
-  // User // TODO: add team members model
+  ProjectMember,
 };

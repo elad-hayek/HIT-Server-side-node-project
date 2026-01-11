@@ -1,37 +1,19 @@
-const config = require('../../config');
-const { logger } = require('../../logging');
+const projectMembersRepository = require("../repositories/project_members_repository");
 
 /**
  * Get team members information
  * Returns array of developers with first_name and last_name only
- * Data is loaded from environment variables, not from database
+ * Data is fetched from MongoDB database
  */
-function getTeamMembers() { // TODO make async
+async function getTeamMembers() {
   try {
-    logger.info('Fetching team members information');
-
-    // Get team members from config (loaded from .env)
-    const teamMembers = config.teamMembers;
-
-    if (!teamMembers || teamMembers.length === 0) {
-      logger.warn('No team members configured in environment');
-      return [];
-    }
-
-    // Return only first_name and last_name as required
-    const result = teamMembers.map(member => ({
-      first_name: member.first_name,
-      last_name: member.last_name
-    }));
-
-    logger.info(`Returning ${result.length} team members`);
-    return result;
+    const members = await projectMembersRepository.getAllProjectMembers();
+    return members;
   } catch (error) {
-    logger.error({ error: error.message }, 'Error fetching team members');
     throw error;
   }
 }
 
 module.exports = {
-  getTeamMembers
+  getTeamMembers,
 };

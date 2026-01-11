@@ -8,7 +8,11 @@ const projectMembersRepository = require("../repositories/project_members_reposi
 async function getTeamMembers() {
   try {
     const members = await projectMembersRepository.getAllProjectMembers();
-    return members;
+
+    return members.map(x => ({
+      first_name: x.first_name,
+      last_name: x.last_name
+    }));
   } catch (error) {
     throw error;
   }

@@ -103,7 +103,6 @@ const getUserById = async function (id) {
     id: user.id,
     first_name: user.first_name,
     last_name: user.last_name,
-    birthday: user.birthday,
     total_costs: totalCosts,
   };
 };

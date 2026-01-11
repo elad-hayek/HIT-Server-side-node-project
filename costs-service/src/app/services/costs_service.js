@@ -60,19 +60,15 @@ const validateCostData = async function (data) {
 };
 
 const validateMonthlyReportParams = function (params) {
-  const { userid, year, month } = params;
+  const { id, year, month } = params;
 
-  if (userid === undefined || userid === null) {
-    throw new ValidationError(
-      "Field 'userid' is required and must be a number"
-    );
+  if (id === undefined || id === null) {
+    throw new ValidationError("Field 'id' is required and must be a number");
   }
 
-  const userIdNum = Number(userid);
+  const userIdNum = Number(id);
   if (isNaN(userIdNum)) {
-    throw new ValidationError(
-      "Field 'userid' is required and must be a number"
-    );
+    throw new ValidationError("Field 'id' is required and must be a number");
   }
 
   const yearNum = Number(year);
@@ -148,7 +144,8 @@ const createCost = async function (costData) {
 };
 
 const getMonthlyReport = async function (params) {
-  const { userid, year, month } = validateMonthlyReportParams(params);
+  const { userid: id, year, month } = validateMonthlyReportParams(params);
+  const userid = id;
 
   // Validate that the user exists
   try {

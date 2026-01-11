@@ -2,18 +2,29 @@
 const pino = require("pino");
 const Log = require("../db/models/log.model");
 
+// Map Pino numeric levels to string levels for database storage
+const pinoLevelToString = {
+  10: "debug", // trace
+  20: "debug", // debug
+  30: "info", // info
+  40: "warn", // warn
+  50: "error", // error
+  60: "error", // fatal
+};
+
 // Custom stream to write directly to MongoDB (no external service call)
 const customStream = {
   write: (msg) => {
     try {
       // Parse log message from pino (JSON string)
       const logObj = JSON.parse(msg);
+      const level = pinoLevelToString[logObj.level] || "info";
 
       // In the logs service, we just log to MongoDB directly
       // No external HTTP calls to avoid infinite loops
 
       const logDoc = new Log({
-        level: logObj.level,
+        level,
         message: logObj.msg,
         timestamp: new Date(logObj.time),
         method: logObj.req?.method,

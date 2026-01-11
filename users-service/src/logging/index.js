@@ -2,16 +2,27 @@
 const pino = require("pino");
 const loggingClient = require("../clients/logging_client");
 
+// Map Pino numeric levels to string levels for database storage
+const pinoLevelToString = {
+  10: "debug", // trace
+  20: "debug", // debug
+  30: "info", // info
+  40: "warn", // warn
+  50: "error", // error
+  60: "error", // fatal
+};
+
 // Custom stream to send logs to REST API via loggingClient
 const customStream = {
   write: (msg) => {
     try {
       // Parse log message from pino (JSON string)
       const logObj = JSON.parse(msg);
+      const level = pinoLevelToString[logObj.level] || "info";
 
-      // Send to logging service as 'custom' log
+      // Send to logging service with valid level
       loggingClient.createLog({
-        level: logObj.level,
+        level,
         message: logObj.msg,
         timestamp: new Date(logObj.time),
         method: logObj.req?.method,

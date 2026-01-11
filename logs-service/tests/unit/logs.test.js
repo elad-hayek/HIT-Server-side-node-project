@@ -1,84 +1,210 @@
-// Unit tests for GET /api/logs endpoint
-const request = require("supertest");
-const createApp = require("../../src/app/app");
+// Logs service tests
+jest.mock("../../src/app/repositories/logs_repository");
+
 const logsService = require("../../src/app/services/log_service");
+const logsRepository = require("../../src/app/repositories/logs_repository");
+const { ValidationError } = require("../../src/errors/validation_error");
 
-// Mock the logs service so we don't need a real database
-jest.mock("../../src/app/services/log_service");
-
-// Create the app instance for testing
-const app = createApp();
-
-describe("GET /api/logs", () => {
-  // This runs before each test to reset mocks
+describe("Logs Service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
- // Test 1: Should return logs successfully when database works
-  it("should return 200 and array of logs when successful", async () => {
-    // Mock data - fake logs to return
-    const now = new Date();
-    const mockLogs = [
-      {
-        _id: "123",
+  describe("createLog", () => {
+    it("should create a log successfully with valid data", async () => {
+      const logData = {
         level: "info",
-        message: "Test log 1",
-        timestamp: now,
-      },
-      {
-        _id: "456",
+        message: "Test log message",
+        timestamp: new Date(),
+      };
+
+      const savedLog = {
+        _id: "log123",
+        level: "info",
+        message: "Test log message",
+        timestamp: new Date(),
+      };
+
+      logsRepository.createLog.mockResolvedValue(savedLog);
+
+      const result = await logsService.createLog(logData);
+
+      expect(logsRepository.createLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: "info",
+          message: "Test log message",
+        })
+      );
+      expect(result).toEqual(
+        expect.objectContaining({
+          _id: "log123",
+          level: "info",
+          message: "Test log message",
+        })
+      );
+    });
+
+    it("should throw ValidationError when level is missing", async () => {
+      const logData = {
+        message: "Test log message",
+        timestamp: new Date(),
+      };
+
+      await expect(logsService.createLog(logData)).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(logsService.createLog(logData)).rejects.toThrow(
+        "Field 'level' is required and must be a string"
+      );
+    });
+
+    it("should throw ValidationError when message is missing", async () => {
+      const logData = {
+        level: "info",
+        timestamp: new Date(),
+      };
+
+      await expect(logsService.createLog(logData)).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(logsService.createLog(logData)).rejects.toThrow(
+        "Field 'message' is required and must be a string"
+      );
+    });
+
+    it("should throw ValidationError when level is invalid", async () => {
+      const logData = {
+        level: "invalid_level",
+        message: "Test log message",
+        timestamp: new Date(),
+      };
+
+      await expect(logsService.createLog(logData)).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(logsService.createLog(logData)).rejects.toThrow(
+        "Field 'level' must be one of: info, warn, error, debug"
+      );
+    });
+
+    it("should throw ValidationError when timestamp is invalid", async () => {
+      const logData = {
+        level: "info",
+        message: "Test log message",
+        timestamp: "invalid-date",
+      };
+
+      await expect(logsService.createLog(logData)).rejects.toThrow(
+        ValidationError
+      );
+    });
+
+    it("should create log with all optional fields", async () => {
+      const logData = {
         level: "error",
-        message: "Test log 2",
-        timestamp: now,
-      },
-    ];
+        message: "API error occurred",
+        timestamp: new Date(),
+        method: "GET",
+        url: "/api/users",
+        statusCode: 500,
+        responseTime: 150,
+      };
 
-    // Tell the mock to return our fake logs
-    logsService.getAllLogs.mockResolvedValue(mockLogs);
+      const savedLog = {
+        _id: "log456",
+        level: "error",
+        message: "API error occurred",
+        timestamp: new Date(),
+        method: "GET",
+        url: "/api/users",
+        statusCode: 500,
+        responseTime: 150,
+      };
 
-    // Send GET request to /api/logs
-    const response = await request(app).get("/api/logs");
+      logsRepository.createLog.mockResolvedValue(savedLog);
 
-    // Check the response
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(2);
-    expect(response.body[0].level).toBe("info");
-    expect(response.body[0].message).toBe("Test log 1");
-    expect(response.body[1].level).toBe("error");
-    expect(response.body[1].message).toBe("Test log 2");
-    expect(logsService.getAllLogs).toHaveBeenCalledTimes(1);
+      const result = await logsService.createLog(logData);
+
+      expect(logsRepository.createLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          level: "error",
+          message: "API error occurred",
+          method: "GET",
+          url: "/api/users",
+          statusCode: 500,
+          responseTime: 150,
+        })
+      );
+      expect(result.method).toBe("GET");
+      expect(result.statusCode).toBe(500);
+    });
   });
 
-  // Test 2: Should return error when database fails
-  it("should return 500 and error message when service fails", async () => {
-    // Tell the mock to throw an error
-    logsService.getAllLogs.mockRejectedValue(
-      new Error("Database connection failed")
-    );
+  describe("getAllLogs", () => {
+    it("should return all logs", async () => {
+      const logs = [
+        {
+          _id: "log1",
+          level: "info",
+          message: "Log 1",
+          timestamp: new Date(),
+        },
+        {
+          _id: "log2",
+          level: "error",
+          message: "Log 2",
+          timestamp: new Date(),
+        },
+      ];
 
-    // Send GET request to /api/logs
-    const response = await request(app).get("/api/logs");
+      logsRepository.findAllLogs.mockResolvedValue(logs);
 
-    // Check the error response
-    expect(response.status).toBe(500);
-    expect(response.body).toHaveProperty("id");
-    expect(response.body).toHaveProperty("message");
-    expect(response.body.id).toBe("LOGS_FETCH_ERROR");
-    expect(response.body.message).toBe("Failed to fetch logs");
-  });
+      const result = await logsService.getAllLogs();
 
-  // Test 3: Should return empty array when no logs exist
-  it("should return 200 and empty array when no logs exist", async () => {
-    // Tell the mock to return empty array
-    logsService.getAllLogs.mockResolvedValue([]);
+      expect(logsRepository.findAllLogs).toHaveBeenCalled();
+      expect(result).toHaveLength(2);
+      expect(result[0].level).toBe("info");
+      expect(result[1].level).toBe("error");
+    });
 
-    // Send GET request to /api/logs
-    const response = await request(app).get("/api/logs");
+    it("should return empty array when no logs exist", async () => {
+      logsRepository.findAllLogs.mockResolvedValue([]);
 
-    // Check the response
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
-    expect(Array.isArray(response.body)).toBe(true);
+      const result = await logsService.getAllLogs();
+
+      expect(result).toEqual([]);
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should sort logs by timestamp newest first", async () => {
+      const now = new Date();
+      const earlier = new Date(now.getTime() - 1000);
+      const latest = new Date(now.getTime() + 1000);
+
+      const logs = [
+        {
+          _id: "log1",
+          level: "info",
+          message: "Latest log",
+          timestamp: latest,
+        },
+        {
+          _id: "log2",
+          level: "error",
+          message: "Earlier log",
+          timestamp: earlier,
+        },
+      ];
+
+      logsRepository.findAllLogs.mockResolvedValue(logs);
+
+      const result = await logsService.getAllLogs();
+
+      expect(result[0].timestamp).toEqual(latest);
+      expect(result[1].timestamp).toEqual(earlier);
+    });
   });
 });

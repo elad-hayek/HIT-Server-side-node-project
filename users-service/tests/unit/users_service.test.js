@@ -230,7 +230,6 @@ describe("Users Service", () => {
         id: 1,
         first_name: "John",
         last_name: "Doe",
-        birthday: new Date("1990-01-01"),
         total_costs: 150.5,
       });
     });

@@ -197,7 +197,7 @@ describe("Costs Service", () => {
 
       await expect(
         costsService.getMonthlyReport({
-          userid: 999,
+          id: 999,
           year: 2025,
           month: 6,
         })
@@ -205,7 +205,7 @@ describe("Costs Service", () => {
 
       await expect(
         costsService.getMonthlyReport({
-          userid: 999,
+          id: 999,
           year: 2025,
           month: 6,
         })
@@ -221,7 +221,7 @@ describe("Costs Service", () => {
 
       await expect(
         costsService.getMonthlyReport({
-          userid: 1,
+          id: 1,
           year: 2025,
           month: 6,
         })
@@ -254,7 +254,7 @@ describe("Costs Service", () => {
 
       const result = await costsService.getMonthlyReport(
         {
-          userid: 1,
+          id: 1,
           year: 2025,
           month: 1,
         },
@@ -267,7 +267,12 @@ describe("Costs Service", () => {
         1
       );
       expect(costsRepository.getCostsByMonthAggregation).not.toHaveBeenCalled();
-      expect(result).toEqual(mockCachedReport);
+      expect(result).toEqual({
+        userid: 1,
+        year: 2025,
+        month: 1,
+        costs: mockCachedReport.costs,
+      });
     });
 
     it("should generate and cache report when not cached and user exists", async () => {
@@ -293,7 +298,7 @@ describe("Costs Service", () => {
 
       const result = await costsService.getMonthlyReport(
         {
-          userid: 2,
+          id: 2,
           year: 2024,
           month: 12,
         },
@@ -319,7 +324,7 @@ describe("Costs Service", () => {
       });
     });
 
-    it("should throw ValidationError when userid is missing", async () => {
+    it("should throw ValidationError when id is missing", async () => {
       await expect(
         costsService.getMonthlyReport(
           {
@@ -335,7 +340,7 @@ describe("Costs Service", () => {
       await expect(
         costsService.getMonthlyReport(
           {
-            userid: 1,
+            id: 1,
             month: 1,
           },
           "req-123"
@@ -347,7 +352,7 @@ describe("Costs Service", () => {
       await expect(
         costsService.getMonthlyReport(
           {
-            userid: 1,
+            id: 1,
             year: 2025,
           },
           "req-123"
@@ -359,7 +364,7 @@ describe("Costs Service", () => {
       await expect(
         costsService.getMonthlyReport(
           {
-            userid: 1,
+            id: 1,
             year: 1800,
             month: 1,
           },
@@ -372,7 +377,7 @@ describe("Costs Service", () => {
       await expect(
         costsService.getMonthlyReport(
           {
-            userid: 1,
+            id: 1,
             year: 2025,
             month: 13,
           },
@@ -385,7 +390,7 @@ describe("Costs Service", () => {
       await expect(
         costsService.getMonthlyReport(
           {
-            userid: 1,
+            id: 1,
             year: 2025,
             month: 0,
           },
@@ -414,7 +419,7 @@ describe("Costs Service", () => {
 
       const result = await costsService.getMonthlyReport(
         {
-          userid: "1",
+          id: "1",
           year: "2025",
           month: "6",
         },

@@ -108,8 +108,24 @@ const getUserById = async function (id, requestId) {
   };
 };
 
+const checkUserExists = async function (id, requestId) {
+  const userId = parseInt(id, 10);
+
+  if (isNaN(userId)) {
+    throw new ValidationError("Invalid user id");
+  }
+
+  const exists = await usersRepository.checkUserExists(userId);
+
+  return {
+    exists,
+    userId,
+  };
+};
+
 module.exports = {
   addUser,
   getAllUsers,
   getUserById,
+  checkUserExists,
 };

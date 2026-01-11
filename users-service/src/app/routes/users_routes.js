@@ -7,5 +7,6 @@ const router = express.Router();
 router.post("/add", usersController.addUser);
 router.get("/users", usersController.getUsers);
 router.get("/users/:id", usersController.getUserById);
+router.get("/exists/:id", usersController.checkUserExists);
 
 module.exports = router;

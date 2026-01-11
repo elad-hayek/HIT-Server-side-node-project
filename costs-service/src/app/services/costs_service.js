@@ -1,9 +1,12 @@
 // Costs service - business logic layer
 const costsRepository = require("../repositories/costs_repository");
+const usersClient = require("../../clients/users_client");
+const { logger } = require("../../logging");
 const { ValidationError } = require("../../errors/validation_error");
+const { ServiceError } = require("../../errors/service_error");
 const Cost = require("../../db/models/cost.model");
 
-const validateCostData = function (data) {
+const validateCostData = async function (data, requestId) {
   const tempCost = new Cost(data);
   const validationError = tempCost.validateSync();
 
@@ -13,7 +16,47 @@ const validateCostData = function (data) {
     throw new ValidationError(firstError.message);
   }
 
-  // TODO: check here if the userid exists in the users service
+  // Check if the userid exists in the users service
+  try {
+    const userExists = await usersClient.checkUserExists(
+      data.userid,
+      requestId
+    );
+    if (!userExists) {
+      throw new ValidationError(`User with id ${data.userid} does not exist`);
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    // Handle service communication errors
+    if (
+      error.code === "ECONNREFUSED" ||
+      error.code === "ETIMEDOUT" ||
+      error.response?.status >= 500
+    ) {
+      logger.error(
+        { userId: data.userid, requestId, error: error.message },
+        "Users service unavailable"
+      );
+      throw new ServiceError("Users service unavailable", 503);
+    } else if (error.response) {
+      logger.error(
+        { userId: data.userid, requestId, error: error.message },
+        "Users service error"
+      );
+      throw new ServiceError(
+        `Users service error: ${error.response.statusText}`,
+        502
+      );
+    } else {
+      logger.error(
+        { userId: data.userid, requestId, error: error.message },
+        "Failed to verify user existence"
+      );
+      throw new ServiceError("Failed to verify user existence", 502);
+    }
+  }
 
   return tempCost;
 };
@@ -87,7 +130,7 @@ const validateUserTotalCostsParams = function (params) {
 };
 
 const createCost = async function (costData, requestId) {
-  const validatedCost = validateCostData(costData);
+  const validatedCost = await validateCostData(costData, requestId);
 
   const cost = await costsRepository.createCost({
     description: validatedCost.description,

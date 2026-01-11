@@ -31,8 +31,19 @@ const getUserById = async function (req, res, next) {
   }
 };
 
+const checkUserExists = async function (req, res, next) {
+  try {
+    const requestId = req.id || req.headers["x-request-id"];
+    const result = await usersService.checkUserExists(req.params.id, requestId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   addUser,
   getUsers,
   getUserById,
+  checkUserExists,
 };

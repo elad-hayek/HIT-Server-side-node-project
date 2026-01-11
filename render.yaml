@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: users-service
+    env: node
+    plan: free
+    rootDir: users-service
+    buildCommand: npm ci
+    startCommand: node server.js
+
+  - type: web
+    name: costs-service
+    env: node
+    plan: free
+    rootDir: costs-service
+    buildCommand: npm ci
+    startCommand: node server.js
+
+  - type: web
+    name: logs-service
+    env: node
+    plan: free
+    rootDir: logs-service
+    buildCommand: npm ci
+    startCommand: node server.js
+
+  - type: web
+    name: admin-service
+    env: node
+    plan: free
+    rootDir: admin-service
+    buildCommand: npm ci
+    startCommand: node server.js

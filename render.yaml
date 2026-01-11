@@ -5,7 +5,7 @@ services:
     plan: free
     rootDir: users-service
     buildCommand: npm ci
-    startCommand: npm start
+    startCommand: node server.js
 
   - type: web
     name: costs-service
@@ -13,7 +13,7 @@ services:
     plan: free
     rootDir: costs-service
     buildCommand: npm ci
-    startCommand: npm start
+    startCommand: node server.js
 
   - type: web
     name: logs-service
@@ -21,7 +21,7 @@ services:
     plan: free
     rootDir: logs-service
     buildCommand: npm ci
-    startCommand: npm start
+    startCommand: node server.js
 
   - type: web
     name: admin-service
@@ -29,4 +29,4 @@ services:
     plan: free
     rootDir: admin-service
     buildCommand: npm ci
-    startCommand: npm start
+    startCommand: node server.js

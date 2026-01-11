@@ -1,10 +1,14 @@
 // Costs service tests
 jest.mock("../../src/app/repositories/costs_repository");
+jest.mock("../../src/clients/users_client");
 
 const costsService = require("../../src/app/services/costs_service");
 const costsRepository = require("../../src/app/repositories/costs_repository");
+const usersClient = require("../../src/clients/users_client");
 const Cost = require("../../src/db/models/cost.model");
 const { ValidationError } = require("../../src/errors/validation_error");
+const { NotFoundError } = require("../../src/errors/not_found_error");
+const { ServiceError } = require("../../src/errors/service_error");
 
 describe("Costs Service", () => {
   beforeEach(() => {
@@ -29,6 +33,7 @@ describe("Costs Service", () => {
         createdAt: new Date(),
       };
 
+      usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.createCost.mockResolvedValue(savedCost);
 
       const result = await costsService.createCost(costData, "req-123");
@@ -172,6 +177,7 @@ describe("Costs Service", () => {
         createdAt: new Date(),
       };
 
+      usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.createCost.mockResolvedValue(savedCost);
 
       await costsService.createCost(costData, "req-123");
@@ -186,12 +192,49 @@ describe("Costs Service", () => {
   });
 
   describe("getMonthlyReport", () => {
-    it("should return cached report when available", async () => {
+    it("should throw NotFoundError when user does not exist", async () => {
+      usersClient.checkUserExists.mockResolvedValue(false);
+
+      await expect(
+        costsService.getMonthlyReport({
+          userid: 999,
+          year: 2025,
+          month: 6,
+        })
+      ).rejects.toThrow(NotFoundError);
+
+      await expect(
+        costsService.getMonthlyReport({
+          userid: 999,
+          year: 2025,
+          month: 6,
+        })
+      ).rejects.toThrow("User with id 999 not found");
+
+      expect(usersClient.checkUserExists).toHaveBeenCalledWith(999);
+    });
+
+    it("should throw ServiceError when users service is unavailable", async () => {
+      const error = new Error("connect ECONNREFUSED");
+      error.code = "ECONNREFUSED";
+      usersClient.checkUserExists.mockRejectedValue(error);
+
+      await expect(
+        costsService.getMonthlyReport({
+          userid: 1,
+          year: 2025,
+          month: 6,
+        })
+      ).rejects.toThrow(ServiceError);
+    });
+
+    it("should return cached report when available and user exists", async () => {
       const cachedData = [
         { category: "food", total: 300 },
         { category: "transport", total: 120 },
       ];
 
+      usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.getMonthlyReportFromCache.mockResolvedValue({
         data: cachedData,
       });
@@ -214,12 +257,13 @@ describe("Costs Service", () => {
       expect(result).toEqual(cachedData);
     });
 
-    it("should generate and cache report when not cached", async () => {
+    it("should generate and cache report when not cached and user exists", async () => {
       const freshReport = [
         { category: "food", total: 500 },
         { category: "fun", total: 200 },
       ];
 
+      usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.getMonthlyReportFromCache.mockResolvedValue(null);
       costsRepository.getCostsByMonthAggregation.mockResolvedValue(freshReport);
       costsRepository.cacheMonthlyReport.mockResolvedValue({
@@ -327,6 +371,7 @@ describe("Costs Service", () => {
     it("should convert string parameters to numbers", async () => {
       const cachedData = [];
 
+      usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.getMonthlyReportFromCache.mockResolvedValue(null);
       costsRepository.getCostsByMonthAggregation.mockResolvedValue(cachedData);
       costsRepository.cacheMonthlyReport.mockResolvedValue({
@@ -354,7 +399,10 @@ describe("Costs Service", () => {
     it("should return total costs for a user", async () => {
       costsRepository.getCostsTotalByUserId.mockResolvedValue(1500);
 
-      const result = await costsService.getUserTotalCosts({ userId: 1 }, "req-123");
+      const result = await costsService.getUserTotalCosts(
+        { userId: 1 },
+        "req-123"
+      );
 
       expect(costsRepository.getCostsTotalByUserId).toHaveBeenCalledWith(1);
       expect(result).toEqual({
@@ -366,7 +414,10 @@ describe("Costs Service", () => {
     it("should return zero when user has no costs", async () => {
       costsRepository.getCostsTotalByUserId.mockResolvedValue(0);
 
-      const result = await costsService.getUserTotalCosts({ userId: 5 }, "req-123");
+      const result = await costsService.getUserTotalCosts(
+        { userId: 5 },
+        "req-123"
+      );
 
       expect(result).toEqual({
         userid: 5,
@@ -375,9 +426,9 @@ describe("Costs Service", () => {
     });
 
     it("should throw ValidationError when userId is missing", async () => {
-      await expect(costsService.getUserTotalCosts({}, "req-123")).rejects.toThrow(
-        ValidationError
-      );
+      await expect(
+        costsService.getUserTotalCosts({}, "req-123")
+      ).rejects.toThrow(ValidationError);
     });
 
     it("should throw ValidationError when userId is not a number", async () => {

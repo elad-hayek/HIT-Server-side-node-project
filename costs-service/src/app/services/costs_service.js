@@ -3,6 +3,7 @@ const costsRepository = require("../repositories/costs_repository");
 const usersClient = require("../../clients/users_client");
 const { logger } = require("../../logging");
 const { ValidationError } = require("../../errors/validation_error");
+const { NotFoundError } = require("../../errors/not_found_error");
 const { ServiceError } = require("../../errors/service_error");
 const Cost = require("../../db/models/cost.model");
 
@@ -148,6 +149,45 @@ const createCost = async function (costData) {
 
 const getMonthlyReport = async function (params) {
   const { userid, year, month } = validateMonthlyReportParams(params);
+
+  // Validate that the user exists
+  try {
+    const userExists = await usersClient.checkUserExists(userid);
+    if (!userExists) {
+      throw new NotFoundError(`User with id ${userid} not found`);
+    }
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    // Handle service communication errors
+    if (
+      error.code === "ECONNREFUSED" ||
+      error.code === "ETIMEDOUT" ||
+      error.response?.status >= 500
+    ) {
+      logger.error(
+        { userId: userid, error: error.message },
+        "Users service unavailable"
+      );
+      throw new ServiceError("Users service unavailable", 503);
+    } else if (error.response) {
+      logger.error(
+        { userId: userid, error: error.message },
+        "Users service error"
+      );
+      throw new ServiceError(
+        `Users service error: ${error.response.statusText}`,
+        502
+      );
+    } else {
+      logger.error(
+        { userId: userid, error: error.message },
+        "Failed to verify user existence"
+      );
+      throw new ServiceError("Failed to verify user existence", 502);
+    }
+  }
 
   // Get current date
   const now = new Date();

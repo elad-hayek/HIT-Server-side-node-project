@@ -3,8 +3,7 @@ const costsService = require("../services/costs_service");
 
 async function addCost(req, res, next) {
   try {
-    const requestId = req.id || req.headers["x-request-id"];
-    const cost = await costsService.createCost(req.body, requestId);
+    const cost = await costsService.createCost(req.body);
     res.status(201).json(cost);
   } catch (err) {
     next(err);
@@ -13,8 +12,7 @@ async function addCost(req, res, next) {
 
 async function getMonthlyReport(req, res, next) {
   try {
-    const requestId = req.id || req.headers["x-request-id"];
-    const report = await costsService.getMonthlyReport(req.query, requestId);
+    const report = await costsService.getMonthlyReport(req.query);
     res.status(200).json(report);
   } catch (err) {
     next(err);
@@ -23,8 +21,7 @@ async function getMonthlyReport(req, res, next) {
 
 async function getUserTotalCosts(req, res, next) {
   try {
-    const requestId = req.id || req.headers["x-request-id"];
-    const totalCosts = await costsService.getUserTotalCosts(req.query, requestId);
+    const totalCosts = await costsService.getUserTotalCosts(req.query);
     res.status(200).json(totalCosts);
   } catch (err) {
     next(err);

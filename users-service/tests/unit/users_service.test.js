@@ -34,7 +34,7 @@ describe("Users Service", () => {
       usersRepository.checkUserExists.mockResolvedValue(false);
       usersRepository.createUser.mockResolvedValue(savedUser);
 
-      const result = await usersService.addUser(userData, "req-123");
+      const result = await usersService.addUser(userData);
 
       expect(usersRepository.checkUserExists).toHaveBeenCalledWith(1);
       expect(usersRepository.createUser).toHaveBeenCalledWith({
@@ -58,11 +58,11 @@ describe("Users Service", () => {
         birthday: "1990-01-01",
       };
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         ValidationError
       );
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         "Field 'id' is required and must be a number"
       );
     });
@@ -74,11 +74,11 @@ describe("Users Service", () => {
         birthday: "1990-01-01",
       };
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         ValidationError
       );
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         "Field 'first_name' is required and must be a string"
       );
     });
@@ -90,11 +90,11 @@ describe("Users Service", () => {
         birthday: "1990-01-01",
       };
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         ValidationError
       );
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         "Field 'last_name' is required and must be a string"
       );
     });
@@ -106,11 +106,11 @@ describe("Users Service", () => {
         last_name: "Doe",
       };
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         ValidationError
       );
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         "Field 'birthday' is required"
       );
     });
@@ -123,7 +123,7 @@ describe("Users Service", () => {
         birthday: "invalid-date",
       };
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         ValidationError
       );
     });
@@ -138,7 +138,7 @@ describe("Users Service", () => {
 
       usersRepository.checkUserExists.mockResolvedValue(true);
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         DuplicateError
       );
     });
@@ -157,7 +157,7 @@ describe("Users Service", () => {
       dbError.code = 11000;
       usersRepository.createUser.mockRejectedValue(dbError);
 
-      await expect(usersService.addUser(userData, "req-123")).rejects.toThrow(
+      await expect(usersService.addUser(userData)).rejects.toThrow(
         DuplicateError
       );
     });
@@ -182,7 +182,7 @@ describe("Users Service", () => {
 
       usersRepository.findAllUsers.mockResolvedValue(users);
 
-      const result = await usersService.getAllUsers("req-123");
+      const result = await usersService.getAllUsers();
 
       expect(usersRepository.findAllUsers).toHaveBeenCalled();
       expect(result).toEqual([
@@ -204,7 +204,7 @@ describe("Users Service", () => {
     it("should return empty array when no users exist", async () => {
       usersRepository.findAllUsers.mockResolvedValue([]);
 
-      const result = await usersService.getAllUsers("req-123");
+      const result = await usersService.getAllUsers();
 
       expect(result).toEqual([]);
     });
@@ -222,10 +222,10 @@ describe("Users Service", () => {
       usersRepository.findUserById.mockResolvedValue(user);
       costsClient.getUserTotalCosts.mockResolvedValue(150.5);
 
-      const result = await usersService.getUserById("1", "req-123");
+      const result = await usersService.getUserById("1");
 
       expect(usersRepository.findUserById).toHaveBeenCalledWith(1);
-      expect(costsClient.getUserTotalCosts).toHaveBeenCalledWith(1, "req-123");
+      expect(costsClient.getUserTotalCosts).toHaveBeenCalledWith(1);
       expect(result).toEqual({
         id: 1,
         first_name: "John",
@@ -238,13 +238,13 @@ describe("Users Service", () => {
     it("should throw NotFoundError when user does not exist", async () => {
       usersRepository.findUserById.mockResolvedValue(null);
 
-      await expect(usersService.getUserById("999", "req-123")).rejects.toThrow(
+      await expect(usersService.getUserById("999")).rejects.toThrow(
         NotFoundError
       );
     });
 
     it("should throw ValidationError when id is not a number", async () => {
-      await expect(usersService.getUserById("abc", "req-123")).rejects.toThrow(
+      await expect(usersService.getUserById("abc")).rejects.toThrow(
         ValidationError
       );
     });
@@ -263,12 +263,10 @@ describe("Users Service", () => {
       error.code = "ECONNREFUSED";
       costsClient.getUserTotalCosts.mockRejectedValue(error);
 
-      await expect(usersService.getUserById("1", "req-123")).rejects.toThrow(
-        ServiceError
-      );
+      await expect(usersService.getUserById("1")).rejects.toThrow(ServiceError);
 
       try {
-        await usersService.getUserById("1", "req-123");
+        await usersService.getUserById("1");
       } catch (err) {
         expect(err.status).toBe(503);
       }
@@ -288,12 +286,10 @@ describe("Users Service", () => {
       error.code = "ETIMEDOUT";
       costsClient.getUserTotalCosts.mockRejectedValue(error);
 
-      await expect(usersService.getUserById("1", "req-123")).rejects.toThrow(
-        ServiceError
-      );
+      await expect(usersService.getUserById("1")).rejects.toThrow(ServiceError);
 
       try {
-        await usersService.getUserById("1", "req-123");
+        await usersService.getUserById("1");
       } catch (err) {
         expect(err.status).toBe(503);
       }
@@ -316,12 +312,10 @@ describe("Users Service", () => {
       };
       costsClient.getUserTotalCosts.mockRejectedValue(error);
 
-      await expect(usersService.getUserById("1", "req-123")).rejects.toThrow(
-        ServiceError
-      );
+      await expect(usersService.getUserById("1")).rejects.toThrow(ServiceError);
 
       try {
-        await usersService.getUserById("1", "req-123");
+        await usersService.getUserById("1");
       } catch (err) {
         expect(err.status).toBe(502);
       }

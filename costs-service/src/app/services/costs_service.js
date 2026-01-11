@@ -6,7 +6,7 @@ const { ValidationError } = require("../../errors/validation_error");
 const { ServiceError } = require("../../errors/service_error");
 const Cost = require("../../db/models/cost.model");
 
-const validateCostData = async function (data, requestId) {
+const validateCostData = async function (data) {
   const tempCost = new Cost(data);
   const validationError = tempCost.validateSync();
 
@@ -18,10 +18,7 @@ const validateCostData = async function (data, requestId) {
 
   // Check if the userid exists in the users service
   try {
-    const userExists = await usersClient.checkUserExists(
-      data.userid,
-      requestId
-    );
+    const userExists = await usersClient.checkUserExists(data.userid);
     if (!userExists) {
       throw new ValidationError(`User with id ${data.userid} does not exist`);
     }
@@ -36,13 +33,13 @@ const validateCostData = async function (data, requestId) {
       error.response?.status >= 500
     ) {
       logger.error(
-        { userId: data.userid, requestId, error: error.message },
+        { userId: data.userid, error: error.message },
         "Users service unavailable"
       );
       throw new ServiceError("Users service unavailable", 503);
     } else if (error.response) {
       logger.error(
-        { userId: data.userid, requestId, error: error.message },
+        { userId: data.userid, error: error.message },
         "Users service error"
       );
       throw new ServiceError(
@@ -51,7 +48,7 @@ const validateCostData = async function (data, requestId) {
       );
     } else {
       logger.error(
-        { userId: data.userid, requestId, error: error.message },
+        { userId: data.userid, error: error.message },
         "Failed to verify user existence"
       );
       throw new ServiceError("Failed to verify user existence", 502);
@@ -129,8 +126,8 @@ const validateUserTotalCostsParams = function (params) {
   return userIdNum;
 };
 
-const createCost = async function (costData, requestId) {
-  const validatedCost = await validateCostData(costData, requestId);
+const createCost = async function (costData) {
+  const validatedCost = await validateCostData(costData);
 
   const cost = await costsRepository.createCost({
     description: validatedCost.description,
@@ -149,7 +146,7 @@ const createCost = async function (costData, requestId) {
   };
 };
 
-const getMonthlyReport = async function (params, requestId) {
+const getMonthlyReport = async function (params) {
   const { userid, year, month } = validateMonthlyReportParams(params);
 
   // Get current date
@@ -216,7 +213,7 @@ const getMonthlyReport = async function (params, requestId) {
   }
 };
 
-const getUserTotalCosts = async function (params, requestId) {
+const getUserTotalCosts = async function (params) {
   const userid = validateUserTotalCostsParams(params);
 
   const total = await costsRepository.getCostsTotalByUserId(userid);

@@ -21,7 +21,7 @@ const validateUserData = function (data) {
   return tempUser;
 };
 
-const addUser = async function (userData, requestId) {
+const addUser = async function (userData) {
   const validatedUser = validateUserData(userData);
 
   const exists = await usersRepository.checkUserExists(validatedUser.id);
@@ -37,7 +37,7 @@ const addUser = async function (userData, requestId) {
       birthday: validatedUser.birthday,
     });
 
-    logger.info({ userId: user.id, requestId }, "User created");
+    logger.info({ userId: user.id }, "User created");
 
     return {
       id: user.id,
@@ -55,7 +55,7 @@ const addUser = async function (userData, requestId) {
   }
 };
 
-const getAllUsers = async function (requestId) {
+const getAllUsers = async function () {
   const users = await usersRepository.findAllUsers();
 
   return users.map((user) => ({
@@ -66,7 +66,7 @@ const getAllUsers = async function (requestId) {
   }));
 };
 
-const getUserById = async function (id, requestId) {
+const getUserById = async function (id) {
   const userId = parseInt(id, 10);
 
   if (isNaN(userId)) {
@@ -81,7 +81,7 @@ const getUserById = async function (id, requestId) {
 
   let totalCosts;
   try {
-    totalCosts = await costsClient.getUserTotalCosts(userId, requestId);
+    totalCosts = await costsClient.getUserTotalCosts(userId);
   } catch (error) {
     if (
       error.code === "ECONNREFUSED" ||
@@ -108,7 +108,7 @@ const getUserById = async function (id, requestId) {
   };
 };
 
-const checkUserExists = async function (id, requestId) {
+const checkUserExists = async function (id) {
   const userId = parseInt(id, 10);
 
   if (isNaN(userId)) {

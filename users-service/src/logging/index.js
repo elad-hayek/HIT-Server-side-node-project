@@ -6,9 +6,6 @@ const loggingClient = require("../clients/logging_client");
 const customStream = {
   write: (msg) => {
     try {
-      // TODO: elad - remove
-      // console.clear()
-
       // Parse log message from pino (JSON string)
       const logObj = JSON.parse(msg);
 

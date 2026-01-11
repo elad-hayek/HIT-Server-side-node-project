@@ -8,7 +8,7 @@ function errorHandler(err, req, res, next) {
   res.err = err;
 
   res.status(status).json({
-    id: requestId,
+    id: requestId, // TODO: return error id
     message: message,
   });
 }

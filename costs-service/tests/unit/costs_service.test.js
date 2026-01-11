@@ -229,14 +229,27 @@ describe("Costs Service", () => {
     });
 
     it("should return cached report when available and user exists", async () => {
-      const cachedData = [
-        { category: "food", total: 300 },
-        { category: "transport", total: 120 },
-      ];
+      const mockCachedReport = {
+        userid: 1,
+        year: 2025,
+        month: 1,
+        costs: [
+          {
+            food: [
+              { sum: 50, description: "lunch", day: 5 },
+              { sum: 30, description: "snack", day: 10 },
+            ],
+            education: [],
+            health: [],
+            housing: [],
+            sports: [],
+          },
+        ],
+      };
 
       usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.getMonthlyReportFromCache.mockResolvedValue({
-        data: cachedData,
+        costs: mockCachedReport.costs,
       });
 
       const result = await costsService.getMonthlyReport(
@@ -254,20 +267,28 @@ describe("Costs Service", () => {
         1
       );
       expect(costsRepository.getCostsByMonthAggregation).not.toHaveBeenCalled();
-      expect(result).toEqual(cachedData);
+      expect(result).toEqual(mockCachedReport);
     });
 
     it("should generate and cache report when not cached and user exists", async () => {
       const freshReport = [
-        { category: "food", total: 500 },
-        { category: "fun", total: 200 },
+        {
+          food: [
+            { sum: 100, description: "pizza", day: 3 },
+            { sum: 50, description: "burger", day: 15 },
+          ],
+          education: [{ sum: 200, description: "book", day: 8 }],
+          health: [],
+          housing: [],
+          sports: [],
+        },
       ];
 
       usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.getMonthlyReportFromCache.mockResolvedValue(null);
       costsRepository.getCostsByMonthAggregation.mockResolvedValue(freshReport);
       costsRepository.cacheMonthlyReport.mockResolvedValue({
-        data: freshReport,
+        costs: freshReport,
       });
 
       const result = await costsService.getMonthlyReport(
@@ -290,7 +311,12 @@ describe("Costs Service", () => {
         12,
         freshReport
       );
-      expect(result).toEqual(freshReport);
+      expect(result).toEqual({
+        userid: 2,
+        year: 2024,
+        month: 12,
+        costs: freshReport,
+      });
     });
 
     it("should throw ValidationError when userid is missing", async () => {
@@ -369,16 +395,24 @@ describe("Costs Service", () => {
     });
 
     it("should convert string parameters to numbers", async () => {
-      const cachedData = [];
+      const cachedData = [
+        {
+          food: [],
+          education: [],
+          health: [],
+          housing: [],
+          sports: [],
+        },
+      ];
 
       usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.getMonthlyReportFromCache.mockResolvedValue(null);
       costsRepository.getCostsByMonthAggregation.mockResolvedValue(cachedData);
       costsRepository.cacheMonthlyReport.mockResolvedValue({
-        data: cachedData,
+        costs: cachedData,
       });
 
-      await costsService.getMonthlyReport(
+      const result = await costsService.getMonthlyReport(
         {
           userid: "1",
           year: "2025",
@@ -392,6 +426,12 @@ describe("Costs Service", () => {
         2025,
         6
       );
+      expect(result).toEqual({
+        userid: 1,
+        year: 2025,
+        month: 6,
+        costs: cachedData,
+      });
     });
   });
 

@@ -41,30 +41,44 @@ const getCostsByMonthAggregation = async function (userid, year, month) {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 1);
 
-  return await Cost.aggregate([
-    {
-      $match: {
-        userid: Number(userid),
-        createdAt: {
-          $gte: startDate,
-          $lt: endDate,
-        },
-      },
+  const costs = await Cost.find({
+    userid: Number(userid),
+    createdAt: {
+      $gte: startDate,
+      $lt: endDate,
     },
+  }).lean();
+
+  // Initialize the costs structure with all categories
+  const costsByCategory = {
+    food: [],
+    education: [],
+    health: [],
+    housing: [],
+    sports: [],
+  };
+
+  // Group costs by category and extract day from createdAt
+  costs.forEach((cost) => {
+    const day = new Date(cost.createdAt).getDate();
+    const costItem = {
+      sum: cost.sum,
+      description: cost.description,
+      day,
+    };
+    costsByCategory[cost.category].push(costItem);
+  });
+
+  // Return in the expected format: array of objects with category keys
+  return [
     {
-      $group: {
-        _id: "$category",
-        total: { $sum: "$sum" },
-      },
+      food: costsByCategory.food,
+      education: costsByCategory.education,
+      health: costsByCategory.health,
+      housing: costsByCategory.housing,
+      sports: costsByCategory.sports,
     },
-    {
-      $project: {
-        _id: 0,
-        category: "$_id",
-        total: 1,
-      },
-    },
-  ]);
+  ];
 };
 
 const cacheMonthlyReport = async function (userid, year, month, data) {
@@ -72,7 +86,7 @@ const cacheMonthlyReport = async function (userid, year, month, data) {
     userid: Number(userid),
     year: Number(year),
     month: Number(month),
-    data,
+    costs: data,
   });
 };
 

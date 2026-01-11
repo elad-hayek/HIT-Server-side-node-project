@@ -14,10 +14,45 @@ const monthlyReportSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    data: {
-      type: Array,
-      required: true,
-    },
+    costs: [
+      {
+        food: [
+          {
+            sum: Number,
+            description: String,
+            day: Number,
+          },
+        ],
+        education: [
+          {
+            sum: Number,
+            description: String,
+            day: Number,
+          },
+        ],
+        health: [
+          {
+            sum: Number,
+            description: String,
+            day: Number,
+          },
+        ],
+        housing: [
+          {
+            sum: Number,
+            description: String,
+            day: Number,
+          },
+        ],
+        sports: [
+          {
+            sum: Number,
+            description: String,
+            day: Number,
+          },
+        ],
+      },
+    ],
   },
   { timestamps: true }
 );

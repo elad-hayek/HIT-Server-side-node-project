@@ -205,15 +205,21 @@ const getMonthlyReport = async function (params) {
   const isInPast =
     year < currentYear || (year === currentYear && month < currentMonth);
 
-  // If future date, return with 0 costs
+  // If future date, return with empty costs
   if (isInFuture) {
     return {
       userid,
       year,
       month,
-      costs: [],
-      total: 0,
-      message: "Future date requested. No costs available.",
+      costs: [
+        {
+          food: [],
+          education: [],
+          health: [],
+          housing: [],
+          sports: [],
+        },
+      ],
     };
   }
 
@@ -224,7 +230,12 @@ const getMonthlyReport = async function (params) {
       year,
       month
     );
-    return report;
+    return {
+      userid,
+      year,
+      month,
+      costs: report,
+    };
   }
 
   // If past date, check cache first
@@ -236,7 +247,12 @@ const getMonthlyReport = async function (params) {
     );
 
     if (cachedReport) {
-      return cachedReport.data;
+      return {
+        userid,
+        year,
+        month,
+        costs: cachedReport.costs,
+      };
     }
 
     // Get fresh data via aggregation
@@ -249,7 +265,12 @@ const getMonthlyReport = async function (params) {
     // Cache the report for future requests
     await costsRepository.cacheMonthlyReport(userid, year, month, report);
 
-    return report;
+    return {
+      userid,
+      year,
+      month,
+      costs: report,
+    };
   }
 };
 

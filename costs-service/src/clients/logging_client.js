@@ -8,9 +8,6 @@ const sendLogToService = async function (logData) {
   }
 
   try {
-    // TODO: elad - send the log to the logging service
-    console.log("Log sent to logging service:", logData);
-
     await axios.post(`${config.LOGGING_SERVICE_URL}/logs`, logData, {
       timeout: config.LOGGING_SERVICE_TIMEOUT,
       headers: {

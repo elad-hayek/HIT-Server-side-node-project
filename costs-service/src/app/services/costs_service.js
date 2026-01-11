@@ -170,10 +170,6 @@ const getMonthlyReport = async function (params, requestId) {
 
   // If future date, return with 0 costs
   if (isInFuture) {
-    logger.info(
-      { userid, year, month, requestId },
-      "Future month requested - returning 0 costs"
-    );
     return {
       userid,
       year,
@@ -186,10 +182,6 @@ const getMonthlyReport = async function (params, requestId) {
 
   // If current month, always do the aggregation (fresh data)
   if (isCurrentMonth) {
-    logger.info(
-      { userid, year, month, requestId },
-      "Current month requested - fetching fresh data"
-    );
     const report = await costsRepository.getCostsByMonthAggregation(
       userid,
       year,
@@ -200,11 +192,6 @@ const getMonthlyReport = async function (params, requestId) {
 
   // If past date, check cache first
   if (isInPast) {
-    logger.info(
-      { userid, year, month, requestId },
-      "Past month requested - checking cache"
-    );
-
     const cachedReport = await costsRepository.getMonthlyReportFromCache(
       userid,
       year,
@@ -212,17 +199,8 @@ const getMonthlyReport = async function (params, requestId) {
     );
 
     if (cachedReport) {
-      logger.info(
-        { userid, year, month, requestId },
-        "Monthly report found in cache"
-      );
       return cachedReport.data;
     }
-
-    logger.info(
-      { userid, year, month, requestId },
-      "Monthly report not in cache - fetching from database"
-    );
 
     // Get fresh data via aggregation
     const report = await costsRepository.getCostsByMonthAggregation(
@@ -233,8 +211,6 @@ const getMonthlyReport = async function (params, requestId) {
 
     // Cache the report for future requests
     await costsRepository.cacheMonthlyReport(userid, year, month, report);
-
-    logger.info({ userid, year, month, requestId }, "Monthly report cached");
 
     return report;
   }

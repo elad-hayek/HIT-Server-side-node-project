@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { VALID_CATEGORIES } = require("../../config/cost_categories");
 
 const costSchema = new mongoose.Schema(
   {
@@ -12,7 +13,12 @@ const costSchema = new mongoose.Schema(
       type: String,
       required: [true, "Field 'category' is required and must be a string"],
       trim: true,
-      minlength: [1, "Field 'category' must not be empty"],
+      enum: {
+        values: VALID_CATEGORIES,
+        message: `Field 'category' must be one of: ${VALID_CATEGORIES.join(
+          ", "
+        )}`,
+      },
     },
     userid: {
       type: Number,

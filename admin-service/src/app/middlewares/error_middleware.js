@@ -7,12 +7,12 @@ const ERROR_ID_MAP = {
   AppError: "ERR_APP_005",
 };
 
-function getErrorId(err) {
+const getErrorId = function (err) {
   const errorType = err.constructor.name;
   return ERROR_ID_MAP[errorType] || "ERR_UNKNOWN_999";
-}
+};
 
-function errorHandler(err, req, res, next) {
+const errorHandler = function (err, req, res, next) {
   const status = err.status || 500;
   const message = err.message || "Internal Server Error";
   const errorId = getErrorId(err);
@@ -24,6 +24,6 @@ function errorHandler(err, req, res, next) {
     id: errorId,
     message: message,
   });
-}
+};
 
 module.exports = errorHandler;

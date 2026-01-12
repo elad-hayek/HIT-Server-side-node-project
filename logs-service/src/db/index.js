@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const config = require("../config");
 const { logger } = require("../logging");
 
-async function connectDB() {
+const connectDB = async function () {
   try {
     await mongoose.connect(config.MONGO_URI);
     logger.info("MongoDB connected");
@@ -11,6 +11,6 @@ async function connectDB() {
     logger.error("MongoDB connection error", err);
     process.exit(1);
   }
-}
+};
 
 module.exports = { connectDB };

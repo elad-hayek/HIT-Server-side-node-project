@@ -3,7 +3,7 @@
  * Returns array of developers with first_name and last_name
  * Hardcoded team members
  */
-function getTeamMembers() {
+const getTeamMembers = function () {
   const teamMembers = [
     {
       first_name: "Elad",
@@ -20,7 +20,7 @@ function getTeamMembers() {
   ];
 
   return teamMembers;
-}
+};
 
 module.exports = {
   getTeamMembers,

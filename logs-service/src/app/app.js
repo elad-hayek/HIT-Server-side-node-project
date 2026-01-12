@@ -3,7 +3,7 @@ const loggerMiddleware = require("./middlewares/logger_middleware");
 const errorMiddleware = require("./middlewares/error_middleware");
 const routes = require("./routes");
 
-function createApp() {
+const createApp = function () {
   const app = express();
   app.use(loggerMiddleware);
   app.use(express.json());
@@ -11,6 +11,6 @@ function createApp() {
   app.use(errorMiddleware);
 
   return app;
-}
+};
 
 module.exports = createApp;

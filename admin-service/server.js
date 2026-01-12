@@ -1,14 +1,11 @@
-// Entry point (connect DB, listen)
+// Entry point (listen without DB)
 const createApp = require("./src/app/app");
-const { connectDB } = require("./src/db");
 const { logger } = require("./src/logging");
 const config = require("./src/config");
 
 const app = createApp();
 
-connectDB().then(() => {
-  const port = config.PORT || 3000;
-  app.listen(port, () => {
-    logger.info(`Server running on port ${port}`);
-  });
+const port = config.PORT || 3000;
+app.listen(port, () => {
+  logger.info(`Server running on port ${port}`);
 });

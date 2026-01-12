@@ -1,6 +1,4 @@
 // Export all models
-const ProjectMember = require("./project_member.model");
+// No models needed - team members are hardcoded
 
-module.exports = {
-  ProjectMember,
-};
+module.exports = {};

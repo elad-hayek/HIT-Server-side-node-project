@@ -8,8 +8,7 @@ const adminService = require("../services/admin_service");
  */
 async function getAbout(req, res, next) {
   try {
-   const requestId = req.id || req.headers["x-request-id"];
-    const teamMembers = await adminService.getTeamMembers();
+    const teamMembers = adminService.getTeamMembers();
     res.status(200).json(teamMembers);
   } catch (error) {
     next(error);

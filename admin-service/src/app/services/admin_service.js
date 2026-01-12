@@ -1,21 +1,25 @@
-const projectMembersRepository = require("../repositories/project_members_repository");
-
 /**
  * Get team members information
- * Returns array of developers with first_name and last_name only
- * Data is fetched from MongoDB database
+ * Returns array of developers with first_name and last_name
+ * Hardcoded team members
  */
-async function getTeamMembers() {
-  try {
-    const members = await projectMembersRepository.getAllProjectMembers();
+function getTeamMembers() {
+  const teamMembers = [
+    {
+      first_name: "Elad",
+      last_name: "Hayek",
+    },
+    {
+      first_name: "Ofir",
+      last_name: "Zohar",
+    },
+    {
+      first_name: "Zohar",
+      last_name: "Talab",
+    },
+  ];
 
-    return members.map(x => ({
-      first_name: x.first_name,
-      last_name: x.last_name
-    }));
-  } catch (error) {
-    throw error;
-  }
+  return teamMembers;
 }
 
 module.exports = {

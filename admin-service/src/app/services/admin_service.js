@@ -1,23 +1,34 @@
-const projectMembersRepository = require("../repositories/project_members_repository");
+// Admin service module - contains business logic for admin operations
 
 /**
- * Get team members information
- * Returns array of developers with first_name and last_name only
- * Data is fetched from MongoDB database
+ * Retrieves all team members information
+ * Returns a hardcoded array of team members with their names
+ * @returns {Array<Object>} Array of team member objects with first_name and last_name properties
  */
-async function getTeamMembers() {
-  try {
-    const members = await projectMembersRepository.getAllProjectMembers();
+const getTeamMembers = function () {
+  // Initialize array of hardcoded team members
+  const teamMembers = [
+    {
+      first_name: "Elad",
+      last_name: "Hayek",
+    },
+    // Team member 2 - Ofir Zohar
+    {
+      first_name: "Ofir",
+      last_name: "Zohar",
+    },
+    // Team member 3 - Zohar Talab
+    {
+      first_name: "Zohar",
+      last_name: "Talab",
+    },
+  ];
 
-    return members.map(x => ({
-      first_name: x.first_name,
-      last_name: x.last_name
-    }));
-  } catch (error) {
-    throw error;
-  }
-}
+  // Return the complete team members array to caller
+  return teamMembers;
+};
 
+// Export service functions for use in controllers
 module.exports = {
   getTeamMembers,
 };

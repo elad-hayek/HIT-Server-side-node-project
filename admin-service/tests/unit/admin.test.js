@@ -1,60 +1,71 @@
-// Mock external dependencies
+// Unit test suite for admin service - tests team members retrieval
+
+// Mock logging client to prevent external HTTP calls during testing
 jest.mock("../../src/clients/logging_client", () => ({
   logRequest: jest.fn(),
   logResponse: jest.fn(),
   logCustom: jest.fn(),
 }));
 
-// Mock the project members repository
-jest.mock("../../src/app/repositories/project_members_repository", () => ({
-  getAllProjectMembers: jest.fn(),
-}));
-
-const projectMembersRepository = require("../../src/app/repositories/project_members_repository");
+// Import the admin service module under test
 const adminService = require("../../src/app/services/admin_service");
 
+/**
+ * Test suite for admin service functionality
+ * Tests the getTeamMembers function behavior
+ */
 describe("Admin Service", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
+  /**
+   * Test suite for getTeamMembers function
+   */
   describe("getTeamMembers", () => {
-    test("should return all team members from database", async () => {
-      const mockMembers = [
-        {
-          first_name: "Alice",
-          last_name: "Johnson",
-        },
-        {
-          first_name: "Bob",
-          last_name: "Smith",
-        },
-      ];
+    /**
+     * Test 1: Verify function returns an array with team members
+     */
+    test("should return hardcoded team members", () => {
+      // Call getTeamMembers function
+      const result = adminService.getTeamMembers();
 
-      projectMembersRepository.getAllProjectMembers.mockResolvedValue(
-        mockMembers
-      );
-
-      const result = await adminService.getTeamMembers();
-
-      expect(result).toEqual(mockMembers);
-      expect(projectMembersRepository.getAllProjectMembers).toHaveBeenCalled();
+      // Verify result is an array instance
+      expect(result).toBeInstanceOf(Array);
+      // Verify array contains at least one team member
+      expect(result.length).toBeGreaterThan(0);
+      // Verify first member has first_name property
+      expect(result[0]).toHaveProperty("first_name");
+      // Verify first member has last_name property
+      expect(result[0]).toHaveProperty("last_name");
     });
 
-    test("should return empty array when no team members exist", async () => {
-      projectMembersRepository.getAllProjectMembers.mockResolvedValue([]);
+    /**
+     * Test 2: Validate team member object structure
+     * Each member should have first_name and last_name strings
+     */
+    test("should return team members with correct structure", () => {
+      // Get team members from service
+      const result = adminService.getTeamMembers();
 
-      const result = await adminService.getTeamMembers();
-
-      expect(result).toEqual([]);
+      // Iterate through each team member
+      result.forEach((member) => {
+        // Verify member has exactly two properties with string values
+        expect(member).toEqual({
+          first_name: expect.any(String),
+          last_name: expect.any(String),
+        });
+      });
     });
 
-    test("should throw error when repository fails", async () => {
-      const error = new Error("Database error");
-      projectMembersRepository.getAllProjectMembers.mockRejectedValue(error);
-      await expect(adminService.getTeamMembers()).rejects.toThrow(
-        "Database error"
-      );
+    /**
+     * Test 3: Ensure function returns consistent data
+     * Multiple calls should return identical arrays
+     */
+    test("should return consistent team members on multiple calls", () => {
+      // Call getTeamMembers first time
+      const result1 = adminService.getTeamMembers();
+      // Call getTeamMembers second time
+      const result2 = adminService.getTeamMembers();
+
+      // Verify both calls return identical data
+      expect(result1).toEqual(result2);
     });
   });
 });

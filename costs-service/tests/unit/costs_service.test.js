@@ -1,22 +1,37 @@
-// Costs service tests
+// Costs service unit tests
+// Tests for all service methods: createCost, getMonthlyReport, getUserTotalCosts
+// Mocks repository and external service calls for isolated testing
+// Uses Jest testing framework with mock functions for dependencies
+
+// Mock the costs repository to avoid database calls during tests
 jest.mock("../../src/app/repositories/costs_repository");
+// Mock the users client to avoid inter-service calls during tests
 jest.mock("../../src/clients/users_client");
 
+// Import the service being tested
 const costsService = require("../../src/app/services/costs_service");
+// Import mocked dependencies for setup and verification
 const costsRepository = require("../../src/app/repositories/costs_repository");
 const usersClient = require("../../src/clients/users_client");
+// Import database model (for reference and validation)
 const Cost = require("../../src/db/models/cost.model");
+// Import error classes to verify proper error handling
 const { ValidationError } = require("../../src/errors/validation_error");
 const { NotFoundError } = require("../../src/errors/not_found_error");
 const { ServiceError } = require("../../src/errors/service_error");
 
 describe("Costs Service", () => {
+  // Reset all mocks before each test to ensure isolation
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe("createCost", () => {
+    // Test 1: Verify cost creation with valid input data
+    // Mocks user existence check and repository save
+    // Verifies that the service properly validates and persists data
     it("should create cost successfully with valid data", async () => {
+      // Arrange: Prepare test data with all required fields
       const costData = {
         description: "Lunch",
         category: "food",
@@ -24,6 +39,7 @@ describe("Costs Service", () => {
         sum: 50,
       };
 
+      // Arrange: Prepare expected returned data with database ID
       const savedCost = {
         _id: "507f1f77bcf86cd799439011",
         description: "Lunch",
@@ -33,33 +49,43 @@ describe("Costs Service", () => {
         createdAt: new Date(),
       };
 
+      // Arrange: Mock user existence check to return true
       usersClient.checkUserExists.mockResolvedValue(true);
+      // Arrange: Mock repository to return saved cost object
       costsRepository.createCost.mockResolvedValue(savedCost);
 
+      // Act: Call the service method with test data
       const result = await costsService.createCost(costData, "req-123");
 
+      // Assert: Verify repository was called with correct parameters
       expect(costsRepository.createCost).toHaveBeenCalledWith({
         description: "Lunch",
         category: "food",
         userid: 1,
         sum: 50,
       });
+      // Assert: Verify the result matches the expected saved cost
       expect(result).toEqual(savedCost);
     });
 
     it("should throw ValidationError when description is missing", async () => {
+      // Arrange: Create cost data without required description field
       const costData = {
         category: "food",
         userid: 1,
         sum: 50,
       };
 
+      // Act & Assert: Verify that missing description throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 3: Verify null description is rejected
+    // Ensures type checking is performed on required fields
     it("should throw ValidationError when description is not a string", async () => {
+      // Arrange: Create cost data with null description (invalid type)
       const costData = {
         description: null,
         category: "food",
@@ -67,24 +93,32 @@ describe("Costs Service", () => {
         sum: 50,
       };
 
+      // Act & Assert: Verify that non-string description throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 4: Verify category field is required
+    // Ensures validation fails when category is missing
     it("should throw ValidationError when category is missing", async () => {
+      // Arrange: Create cost data without required category field
       const costData = {
         description: "Lunch",
         userid: 1,
         sum: 50,
       };
 
+      // Act & Assert: Verify that missing category throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 5: Verify category must be a string
+    // Ensures type validation is enforced on category field
     it("should throw ValidationError when category is not a string", async () => {
+      // Arrange: Create cost data with null category (invalid type)
       const costData = {
         description: "Lunch",
         category: null,
@@ -92,24 +126,32 @@ describe("Costs Service", () => {
         sum: 50,
       };
 
+      // Act & Assert: Verify that non-string category throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 6: Verify userid field is required
+    // Ensures validation fails when userid is missing
     it("should throw ValidationError when userid is missing", async () => {
+      // Arrange: Create cost data without required userid field
       const costData = {
         description: "Lunch",
         category: "food",
         sum: 50,
       };
 
+      // Act & Assert: Verify that missing userid throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 7: Verify userid must be a number
+    // Ensures type validation is enforced on userid field
     it("should throw ValidationError when userid is not a number", async () => {
+      // Arrange: Create cost data with string userid (invalid type)
       const costData = {
         description: "Lunch",
         category: "food",
@@ -117,24 +159,32 @@ describe("Costs Service", () => {
         sum: 50,
       };
 
+      // Act & Assert: Verify that non-number userid throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 8: Verify sum field is required
+    // Ensures validation fails when sum is missing
     it("should throw ValidationError when sum is missing", async () => {
+      // Arrange: Create cost data without required sum field
       const costData = {
         description: "Lunch",
         category: "food",
         userid: 1,
       };
 
+      // Act & Assert: Verify that missing sum throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 9: Verify sum must be a number
+    // Ensures type validation is enforced on sum field
     it("should throw ValidationError when sum is not a number", async () => {
+      // Arrange: Create cost data with string sum (invalid type)
       const costData = {
         description: "Lunch",
         category: "food",
@@ -142,12 +192,16 @@ describe("Costs Service", () => {
         sum: "not-a-number",
       };
 
+      // Act & Assert: Verify that non-number sum throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 10: Verify sum must be positive
+    // Ensures cost amounts are positive numbers only
     it("should throw ValidationError when sum is zero or negative", async () => {
+      // Arrange: Create cost data with zero sum (invalid amount)
       const costData = {
         description: "Lunch",
         category: "food",
@@ -155,12 +209,16 @@ describe("Costs Service", () => {
         sum: 0,
       };
 
+      // Act & Assert: Verify that zero/negative sum throws ValidationError
       await expect(
         costsService.createCost(costData, "req-123")
       ).rejects.toThrow(ValidationError);
     });
 
+    // Test 11: Verify whitespace trimming on string fields
+    // Ensures description and category are cleaned of leading/trailing spaces
     it("should trim whitespace from description and category", async () => {
+      // Arrange: Create cost data with whitespace around strings
       const costData = {
         description: "  Lunch  ",
         category: "  food  ",
@@ -168,6 +226,7 @@ describe("Costs Service", () => {
         sum: 50,
       };
 
+      // Arrange: Expected data after trimming whitespace
       const savedCost = {
         _id: "507f1f77bcf86cd799439011",
         description: "Lunch",
@@ -177,11 +236,14 @@ describe("Costs Service", () => {
         createdAt: new Date(),
       };
 
+      // Arrange: Mock user and repository calls
       usersClient.checkUserExists.mockResolvedValue(true);
       costsRepository.createCost.mockResolvedValue(savedCost);
 
+      // Act: Call service with data containing whitespace
       await costsService.createCost(costData, "req-123");
 
+      // Assert: Verify repository was called with trimmed values
       expect(costsRepository.createCost).toHaveBeenCalledWith({
         description: "Lunch",
         category: "food",
@@ -192,6 +254,8 @@ describe("Costs Service", () => {
   });
 
   describe("getMonthlyReport", () => {
+    // Tests for monthly cost report generation
+    // Validates user existence, handles caching, and converts string parameters
     it("should throw NotFoundError when user does not exist", async () => {
       usersClient.checkUserExists.mockResolvedValue(false);
 
@@ -441,6 +505,8 @@ describe("Costs Service", () => {
   });
 
   describe("getUserTotalCosts", () => {
+    // Tests for calculating total costs for a specific user
+    // Validates userId parameter and handles zero costs case
     it("should return total costs for a user", async () => {
       costsRepository.getCostsTotalByUserId.mockResolvedValue(1500);
 

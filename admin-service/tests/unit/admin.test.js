@@ -5,56 +5,35 @@ jest.mock("../../src/clients/logging_client", () => ({
   logCustom: jest.fn(),
 }));
 
-// Mock the project members repository
-jest.mock("../../src/app/repositories/project_members_repository", () => ({
-  getAllProjectMembers: jest.fn(),
-}));
-
-const projectMembersRepository = require("../../src/app/repositories/project_members_repository");
 const adminService = require("../../src/app/services/admin_service");
 
 describe("Admin Service", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe("getTeamMembers", () => {
-    test("should return all team members from database", async () => {
-      const mockMembers = [
-        {
-          first_name: "Alice",
-          last_name: "Johnson",
-        },
-        {
-          first_name: "Bob",
-          last_name: "Smith",
-        },
-      ];
+    test("should return hardcoded team members", () => {
+      const result = adminService.getTeamMembers();
 
-      projectMembersRepository.getAllProjectMembers.mockResolvedValue(
-        mockMembers
-      );
-
-      const result = await adminService.getTeamMembers();
-
-      expect(result).toEqual(mockMembers);
-      expect(projectMembersRepository.getAllProjectMembers).toHaveBeenCalled();
+      expect(result).toBeInstanceOf(Array);
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0]).toHaveProperty("first_name");
+      expect(result[0]).toHaveProperty("last_name");
     });
 
-    test("should return empty array when no team members exist", async () => {
-      projectMembersRepository.getAllProjectMembers.mockResolvedValue([]);
+    test("should return team members with correct structure", () => {
+      const result = adminService.getTeamMembers();
 
-      const result = await adminService.getTeamMembers();
-
-      expect(result).toEqual([]);
+      result.forEach((member) => {
+        expect(member).toEqual({
+          first_name: expect.any(String),
+          last_name: expect.any(String),
+        });
+      });
     });
 
-    test("should throw error when repository fails", async () => {
-      const error = new Error("Database error");
-      projectMembersRepository.getAllProjectMembers.mockRejectedValue(error);
-      await expect(adminService.getTeamMembers()).rejects.toThrow(
-        "Database error"
-      );
+    test("should return consistent team members on multiple calls", () => {
+      const result1 = adminService.getTeamMembers();
+      const result2 = adminService.getTeamMembers();
+
+      expect(result1).toEqual(result2);
     });
   });
 });

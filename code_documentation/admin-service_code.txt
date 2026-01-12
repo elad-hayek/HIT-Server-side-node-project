@@ -1,0 +1,794 @@
+================================================================================
+ADMIN SERVICE - COMPLETE CODE DOCUMENTATION
+================================================================================
+
+This file contains all source code files from the admin-service microservice,
+organized by folder structure for easy navigation and code review.
+
+================================================================================
+FOLDER STRUCTURE
+================================================================================
+
+admin-service/
+├── package.json
+├── server.js
+└── src/
+    ├── app/
+    │   ├── app.js
+    │   ├── controllers/
+    │   │   └── admin_controller.js
+    │   ├── middlewares/
+    │   │   ├── error_middleware.js
+    │   │   └── logger_middleware.js
+    │   ├── routes/
+    │   │   ├── admin_routes.js
+    │   │   └── index.js
+    │   └── services/
+    │       └── admin_service.js
+    ├── clients/
+    │   └── logging_client.js
+    ├── config/
+    │   └── index.js
+    ├── db/
+    │   └── models/
+    │       └── index.js
+    ├── errors/
+    │   ├── app_error.js
+    │   ├── duplicate_error.js
+    │   ├── not_found_error.js
+    │   ├── service_error.js
+    │   └── validation_error.js
+    └── logging/
+        └── index.js
+
+================================================================================
+FILE: admin-service/package.json
+================================================================================
+
+{
+  "name": "hit-users-service",
+  "version": "1.0.0",
+  "description": "Users microservice",
+  "main": "server.js",
+  "scripts": {
+    "test": "cross-env NODE_ENV=test jest",
+    "test:watch": "cross-env NODE_ENV=test jest --watch",
+    "start": "node server.js",
+    "dev": "cross-env PORT=2000 nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cross-env": "^7.0.3",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mongoose": "^9.1.1",
+    "pino": "^10.1.0",
+    "pino-http": "^11.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.11",
+    "pino-pretty": "^13.1.3",
+    "supertest": "^7.2.2"
+  }
+}
+
+================================================================================
+FILE: admin-service/server.js
+================================================================================
+
+// Server entry point - initializes and starts the Express application
+
+// Load application factory from app configuration
+const createApp = require("./src/app/app");
+// Import logger instance for logging server events
+const { logger } = require("./src/logging");
+// Load environment configuration variables
+const config = require("./src/config");
+
+// Create Express application with all middleware and routes configured
+const app = createApp();
+
+// Extract port number from config or use default port 2000
+const port = config.PORT || 2000;
+// Start listening for HTTP requests on specified port
+app.listen(port, () => {
+  // Log server startup confirmation with port number
+  logger.info(`Server running on port ${port}`);
+});
+
+================================================================================
+FILE: admin-service/src/app/app.js
+================================================================================
+
+// Express application factory module - creates and configures the Express app instance
+const express = require("express");
+const loggerMiddleware = require("./middlewares/logger_middleware");
+const errorMiddleware = require("./middlewares/error_middleware");
+const routes = require("./routes");
+
+/**
+ * Factory function that creates and configures Express application
+ * Applies middleware stack and route handlers
+ * @returns {Object} Configured Express application instance
+ */
+const createApp = function () {
+  // Initialize Express application instance
+  const app = express();
+  // Apply HTTP request logging middleware first in the stack
+  app.use(loggerMiddleware);
+  // Parse incoming JSON request bodies to JavaScript objects
+  app.use(express.json());
+  // Mount API routes under /api path prefix
+  app.use("/api", routes);
+  // Apply error handling middleware at the end of the stack
+  app.use(errorMiddleware);
+
+  // Return configured application for server startup
+  return app;
+};
+
+// Export app factory function for server initialization
+module.exports = createApp;
+
+================================================================================
+FILE: admin-service/src/app/controllers/admin_controller.js
+================================================================================
+
+// Admin controller module - handles HTTP requests for admin endpoints
+const adminService = require("../services/admin_service");
+
+/**
+ * Retrieves team members information endpoint
+ * Handles GET /api/about requests
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object containing JSON response
+ * @param {Function} next - Express next middleware function for error handling
+ * @returns {void} Sends JSON response with team members (200) or error to next middleware
+ */
+const getAbout = function (req, res, next) {
+  try {
+    // Fetch hardcoded team members from service layer
+    const teamMembers = adminService.getTeamMembers();
+    // Return 200 success status with team members data
+    res.status(200).json(teamMembers);
+  } catch (error) {
+    // Pass any errors to error handling middleware
+    next(error);
+  }
+};
+
+// Export controller functions for routing use
+module.exports = {
+  getAbout,
+};
+
+================================================================================
+FILE: admin-service/src/app/services/admin_service.js
+================================================================================
+
+// Admin service module - contains business logic for admin operations
+
+/**
+ * Retrieves all team members information
+ * Returns a hardcoded array of team members with their names
+ * @returns {Array<Object>} Array of team member objects with first_name and last_name properties
+ */
+const getTeamMembers = function () {
+  // Initialize array of hardcoded team members
+  const teamMembers = [
+    {
+      first_name: "Elad",
+      last_name: "Hayek",
+    },
+    // Team member 2 - Ofir Zohar
+    {
+      first_name: "Ofir",
+      last_name: "Zohar",
+    },
+    // Team member 3 - Zohar Talab
+    {
+      first_name: "Zohar",
+      last_name: "Talab",
+    },
+  ];
+
+  // Return the complete team members array to caller
+  return teamMembers;
+};
+
+// Export service functions for use in controllers
+module.exports = {
+  getTeamMembers,
+};
+
+================================================================================
+FILE: admin-service/src/app/routes/admin_routes.js
+================================================================================
+
+// Admin routes module - defines HTTP endpoints for admin service
+
+// Import Express framework for route definition
+const express = require("express");
+// Import admin controller with route handler functions
+const adminController = require("../controllers/admin_controller");
+
+// Create Express router instance for admin routes
+const router = express.Router();
+
+// Define GET endpoint to retrieve team member information
+// Route: GET /api/about
+// Handler: Returns JSON array of team members with names
+router.get("/about", adminController.getAbout);
+
+// Export router for mounting in main app routes
+module.exports = router;
+
+================================================================================
+FILE: admin-service/src/app/routes/index.js
+================================================================================
+
+// Main routes aggregation module - combines all API route modules
+
+// Import Express router for route definition
+const express = require("express");
+// Import admin-specific routes module
+const adminRoutes = require("./admin_routes");
+// Create main router instance for API routes
+const router = express.Router();
+
+// Mount admin routes at root path (handles /about endpoint)
+router.use("/", adminRoutes);
+
+// Export aggregated routes for app mounting
+module.exports = router;
+
+================================================================================
+FILE: admin-service/src/app/middlewares/error_middleware.js
+================================================================================
+
+// Error handling middleware module - processes and formats error responses
+
+// Map error types to standardized error IDs for client identification
+const ERROR_ID_MAP = {
+  ValidationError: "ERR_VALIDATION_001",
+  NotFoundError: "ERR_NOT_FOUND_002",
+  DuplicateError: "ERR_DUPLICATE_003",
+  ServiceError: "ERR_SERVICE_004",
+  AppError: "ERR_APP_005",
+};
+
+/**
+ * Maps error class name to standardized error ID
+ * Used to identify error types in API responses
+ * @param {Error} err - Error object with constructor name
+ * @returns {string} Standardized error ID string
+ */
+const getErrorId = function (err) {
+  // Extract error type name from error class constructor
+  const errorType = err.constructor.name;
+  // Return mapped ID or generic unknown error code
+  return ERROR_ID_MAP[errorType] || "ERR_UNKNOWN_999";
+};
+
+/**
+ * Express error handling middleware
+ * Catches errors and sends formatted JSON response
+ * @param {Error} err - Error object thrown during request processing
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object for sending reply
+ * @param {Function} next - Express next middleware function (unused in error handler)
+ * @returns {void} Sends JSON response with error details
+ */
+const errorHandler = function (err, req, res, next) {
+  // Extract HTTP status code from error or default to 500
+  const status = err.status || 500;
+  // Get error message or provide default message
+  const message = err.message || "Internal Server Error";
+  // Map error type to standardized error ID
+  const errorId = getErrorId(err);
+
+  // Attach error to response object for logging middleware
+  res.err = err;
+
+  // Send error response in JSON format with status code
+  res.status(status).json({
+    id: errorId,
+    message: message,
+  });
+};
+
+// Export error handler middleware for Express app
+module.exports = errorHandler;
+
+================================================================================
+FILE: admin-service/src/app/middlewares/logger_middleware.js
+================================================================================
+
+// HTTP request logging middleware module - logs all HTTP requests and responses
+
+// Import pino HTTP logging plugin for request/response tracking
+const pinoHttp = require("pino-http");
+// Import logger instance configured for the application
+const { logger } = require("../../logging");
+
+// Configure pino HTTP logger with custom formatting and level determination
+const httpLogger = pinoHttp({
+  // Use application logger instance for output
+  logger,
+  /**
+   * Determines appropriate log level based on HTTP response status
+   * Client errors (4xx) log as warnings, server errors (5xx) as errors
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Error} err - Error object if present
+   * @returns {string} Log level: "info", "warn", or "error"
+   */
+  customLogLevel: function (req, res, err) {
+    // Log client errors (400-499) as warnings
+    if (res.statusCode >= 400 && res.statusCode < 500) {
+      return "warn";
+    } else if (res.statusCode >= 500 || err || res.err) {
+      // Log server errors (500+) and processing errors as errors
+      return "error";
+    }
+    // Log successful requests (2xx, 3xx) as info
+    return "info";
+  },
+  /**
+   * Formats log message for successful requests
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object with status code
+   * @returns {string} Formatted log message with method, path, status
+   */
+  customSuccessMessage: function (req, res) {
+    return `${req.method} ${req.url} ${res.statusCode}`;
+  },
+  /**
+   * Formats log message for error responses
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Error} err - Error that occurred during request
+   * @returns {string} Formatted error log with details
+   */
+  customErrorMessage: function (req, res, err) {
+    // Extract error from parameter or response object
+    const error = err || res.err;
+    // Return formatted message with error details
+    return `${req.method} ${req.url} ${res.statusCode} - ${error?.message}`;
+  },
+});
+
+/**
+ * Logging middleware function called for each HTTP request
+ * Logs request/response information using pino
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {void} Passes control to next middleware
+ */
+const loggingMiddleware = function (req, res, next) {
+  // Call pino HTTP logger to process request/response
+  httpLogger(req, res, next);
+};
+
+// Export logging middleware for use in Express app
+module.exports = loggingMiddleware;
+
+================================================================================
+FILE: admin-service/src/clients/logging_client.js
+================================================================================
+
+// Logging service client module - handles communication with external logging service
+
+// Import HTTP client for making requests to logging service
+const axios = require("axios");
+// Import configuration with logging service URL and timeout settings
+const config = require("../config");
+
+/**
+ * Sends log data to external logging service via HTTP POST
+ * Handles network errors gracefully without throwing
+ * @param {Object} logData - Log object with level, message, timestamp, etc.
+ * @returns {Promise<void>} Resolves after sending or silently fails
+ */
+const sendLogToService = async function (logData) {
+  // Check if logging service URL is configured
+  if (!config.LOGGING_SERVICE_URL) {
+    // Exit early if service is not configured
+    return;
+  }
+
+  try {
+    // Send POST request to logging service endpoint
+    await axios.post(`${config.LOGGING_SERVICE_URL}/logs`, logData, {
+      // Set request timeout to prevent hanging
+      timeout: config.LOGGING_SERVICE_TIMEOUT,
+      // Specify JSON content type for the request
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    // Log error to console if service communication fails
+    console.error("Failed to send log to logging service:", error.message);
+  }
+};
+
+/**
+ * Creates and sends a log entry to the logging service
+ * Wraps log data and sends asynchronously
+ * @param {Object} logData - Log object with level, message, and optional metadata
+ * @returns {void} Sends log asynchronously without waiting
+ */
+const createLog = function (logData) {
+  // Invoke async send function without awaiting to avoid blocking
+  sendLogToService({
+    // Spread existing log data
+    ...logData,
+    // Add current timestamp in ISO format
+    timestamp: new Date().toISOString(),
+  });
+};
+
+// Export logging client functions for use throughout application
+module.exports = {
+  createLog,
+};
+
+================================================================================
+FILE: admin-service/src/config/index.js
+================================================================================
+
+// Environment configuration module - loads and exports application settings
+
+// Load environment variables from .env file into process.env
+require("dotenv").config();
+
+// Export configuration object with environment-specific settings
+const env = {
+  // Application environment (development, production, test)
+  NODE_ENV: process.env.NODE_ENV || "development",
+  // Server port for HTTP listener
+  PORT: process.env.PORT || 2000,
+  // MongoDB connection URI for database access
+  MONGO_URI: process.env.MONGO_URI || "mongodb://localhost:27017/app",
+  // External logging service base URL for log submission
+  LOGGING_SERVICE_URL:
+    process.env.LOGGING_SERVICE_URL || "http://localhost:5000/api",
+  // Request timeout for logging service communication in milliseconds
+  LOGGING_SERVICE_TIMEOUT: process.env.LOGGING_SERVICE_TIMEOUT || 3000,
+};
+
+// Export configuration for use throughout application
+module.exports = env;
+
+================================================================================
+FILE: admin-service/src/db/models/index.js
+================================================================================
+
+// Database models aggregation module - exports all Mongoose models
+
+// Note: No models are used in admin service
+// Team members data is hardcoded in the service layer
+// This file is maintained for consistency with architecture
+
+// Export empty models object as all data is in memory
+module.exports = {};
+
+================================================================================
+FILE: admin-service/src/errors/app_error.js
+================================================================================
+
+// Application error class module - defines base error for application
+
+/**
+ * Base error class for all application errors
+ * Extends native JavaScript Error to add HTTP status codes
+ * All custom errors should inherit from this class
+ */
+class AppError extends Error {
+  /**
+   * Constructor for creating application error instances
+   * @param {string} message - Human-readable error description
+   * @param {number} status - HTTP status code (default 500)
+   */
+  constructor(message, status) {
+    // Call parent Error constructor with message
+    super(message);
+    // Store HTTP status code for response handling
+    this.status = status;
+  }
+}
+
+// Export AppError class for inheritance by specific error types
+module.exports = { AppError };
+
+================================================================================
+FILE: admin-service/src/errors/duplicate_error.js
+================================================================================
+
+// Duplicate error module - handles resource conflict scenarios (HTTP 409)
+// Used when attempting to create a resource that already exists (duplicate ID, email, etc.)
+
+// Import base AppError class for inheritance
+const { AppError } = require("./app_error");
+
+/**
+ * DuplicateError class for resource conflict/duplication scenarios
+ * Extends AppError with HTTP 409 (Conflict) status code
+ * Used when client attempts to create a resource with duplicate unique fields
+ */
+class DuplicateError extends AppError {
+  /**
+   * Constructor for creating duplicate error instances
+   * @param {string} message - Human-readable error description of the duplication
+   */
+  constructor(message) {
+    // Call parent with message and HTTP 409 Conflict status
+    super(message, 409);
+    // Set error name for debugging and error identification
+    this.name = "DuplicateError";
+  }
+}
+
+// Export DuplicateError class for use in services and controllers
+module.exports = { DuplicateError };
+
+================================================================================
+FILE: admin-service/src/errors/not_found_error.js
+================================================================================
+
+// Not found error module - handles resource not found scenarios (HTTP 404)
+// Used when requested resource (user, cost, log) does not exist in database
+
+// Import base AppError class for inheritance
+const { AppError } = require("./app_error");
+
+/**
+ * NotFoundError class for missing resource scenarios
+ * Extends AppError with HTTP 404 (Not Found) status code
+ * Used when client requests a resource that doesn't exist
+ */
+class NotFoundError extends AppError {
+  /**
+   * Constructor for creating not found error instances
+   * @param {string} message - Human-readable error description of what was not found
+   */
+  constructor(message) {
+    // Call parent with message and HTTP 404 Not Found status
+    super(message, 404);
+    // Set error name for debugging and error identification
+    this.name = "NotFoundError";
+  }
+}
+
+// Export NotFoundError class for use in services and controllers
+module.exports = { NotFoundError };
+
+================================================================================
+FILE: admin-service/src/errors/service_error.js
+================================================================================
+
+// Service error module - handles inter-service communication failures (HTTP 502/503)
+// Used when external services (users, costs, logging) are unavailable or fail
+
+// Import base AppError class for inheritance
+const { AppError } = require("./app_error");
+
+/**
+ * ServiceError class for inter-service communication failures
+ * Extends AppError with configurable HTTP status code (default 502 Bad Gateway)
+ * Used when external services are unreachable, timeout, or return errors
+ */
+class ServiceError extends AppError {
+  /**
+   * Constructor for creating service error instances
+   * @param {string} message - Human-readable error description of service failure
+   * @param {number} status - HTTP status code (502 Bad Gateway or 503 Service Unavailable), default 502
+   */
+  constructor(message, status = 502) {
+    // Call parent with message and provided or default HTTP 502 status
+    super(message, status);
+    // Set error name for debugging and error identification
+    this.name = "ServiceError";
+  }
+}
+
+// Export ServiceError class for use in services and controllers
+module.exports = { ServiceError };
+
+================================================================================
+FILE: admin-service/src/errors/validation_error.js
+================================================================================
+
+// Validation error module - handles request validation failures (HTTP 400)
+// Used when input data fails schema validation or constraint checks
+
+// Import base AppError class for inheritance
+const { AppError } = require("./app_error");
+
+/**
+ * ValidationError class for data validation failures
+ * Extends AppError with HTTP 400 (Bad Request) status code
+ * Used when client sends invalid data that fails validation rules
+ */
+class ValidationError extends AppError {
+  /**
+   * Constructor for creating validation error instances
+   * @param {string} message - Human-readable error description of validation failure
+   */
+  constructor(message) {
+    // Call parent with message and HTTP 400 Bad Request status
+    super(message, 400);
+    // Set error name for debugging and error identification
+    this.name = "ValidationError";
+  }
+}
+
+// Export ValidationError class for use in services and controllers
+module.exports = { ValidationError };
+
+================================================================================
+FILE: admin-service/src/logging/index.js
+================================================================================
+
+// Logger configuration module - sets up Pino logging with custom streams
+
+// Import Pino logging library for structured logging
+const pino = require("pino");
+// Import logging client for sending logs to external service
+const loggingClient = require("../clients/logging_client");
+
+// Map Pino numeric log levels to string representations for storage
+const pinoLevelToString = {
+  10: "debug", // trace level (Pino 10)
+  20: "debug", // debug level (Pino 20)
+  30: "info", // info level (Pino 30)
+  40: "warn", // warn level (Pino 40)
+  50: "error", // error level (Pino 50)
+  60: "error", // fatal level (Pino 60)
+};
+
+/**
+ * Custom stream object for writing logs to external service
+ * Implements write(msg) interface for Pino streams
+ */
+const customStream = {
+  /**
+   * Writes log message to logging service via HTTP
+   * Parses Pino JSON output and sends to service
+   * @param {string} msg - JSON formatted log message from Pino
+   * @returns {void}
+   */
+  write: (msg) => {
+    try {
+      // Parse Pino log message JSON string to object
+      const logObj = JSON.parse(msg);
+      // Convert numeric Pino level to string level
+      const level = pinoLevelToString[logObj.level] || "info";
+
+      // Send structured log to logging service endpoint
+      loggingClient.createLog({
+        // Log severity level (info, warn, error, debug)
+        level,
+        // Log message text content
+        message: logObj.msg,
+        // Log timestamp in Date format
+        timestamp: new Date(logObj.time),
+        // HTTP method from request (if available)
+        method: logObj.req?.method,
+        // URL path from request (if available)
+        url: logObj.req?.url,
+        // HTTP response status code (if available)
+        statusCode: logObj.res?.statusCode,
+        // Request processing time in milliseconds
+        responseTime: logObj.responseTime,
+      });
+    } catch (err) {
+      // Fallback error logging if processing fails
+      console.error("Failed to send log:", err.message);
+    }
+  },
+};
+
+// Create Pino logger with console and custom stream outputs
+const logger = pino(
+  // Configure base logger with info level
+  { level: "info" },
+  // Use multiple output streams simultaneously
+  pino.multistream([
+    // Stream 1: Output to standard output (console)
+    { level: "info", stream: process.stdout },
+    // Stream 2: Output to custom logging service client
+    { level: "info", stream: customStream },
+  ])
+);
+
+// Export logger instance for use throughout application
+module.exports = { logger };
+
+================================================================================
+FILE: admin-service/tests/unit/admin.test.js
+================================================================================
+
+// Unit test suite for admin service - tests team members retrieval
+
+// Mock logging client to prevent external HTTP calls during testing
+jest.mock("../../src/clients/logging_client", () => ({
+  logRequest: jest.fn(),
+  logResponse: jest.fn(),
+  logCustom: jest.fn(),
+}));
+
+// Import the admin service module under test
+const adminService = require("../../src/app/services/admin_service");
+
+/**
+ * Test suite for admin service functionality
+ * Tests the getTeamMembers function behavior
+ */
+describe("Admin Service", () => {
+  /**
+   * Test suite for getTeamMembers function
+   */
+  describe("getTeamMembers", () => {
+    /**
+     * Test 1: Verify function returns an array with team members
+     */
+    test("should return hardcoded team members", () => {
+      // Call getTeamMembers function
+      const result = adminService.getTeamMembers();
+
+      // Verify result is an array instance
+      expect(result).toBeInstanceOf(Array);
+      // Verify array contains at least one team member
+      expect(result.length).toBeGreaterThan(0);
+      // Verify first member has first_name property
+      expect(result[0]).toHaveProperty("first_name");
+      // Verify first member has last_name property
+      expect(result[0]).toHaveProperty("last_name");
+    });
+
+    /**
+     * Test 2: Validate team member object structure
+     * Each member should have first_name and last_name strings
+     */
+    test("should return team members with correct structure", () => {
+      // Get team members from service
+      const result = adminService.getTeamMembers();
+
+      // Iterate through each team member
+      result.forEach((member) => {
+        // Verify member has exactly two properties with string values
+        expect(member).toEqual({
+          first_name: expect.any(String),
+          last_name: expect.any(String),
+        });
+      });
+    });
+
+    /**
+     * Test 3: Ensure function returns consistent data
+     * Multiple calls should return identical arrays
+     */
+    test("should return consistent team members on multiple calls", () => {
+      // Call getTeamMembers first time
+      const result1 = adminService.getTeamMembers();
+      // Call getTeamMembers second time
+      const result2 = adminService.getTeamMembers();
+
+      // Verify both calls return identical data
+      expect(result1).toEqual(result2);
+    });
+  });
+});
+
+================================================================================
+END OF ADMIN SERVICE CODE DOCUMENTATION
+================================================================================

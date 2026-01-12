@@ -1,0 +1,93 @@
+================================================================================
+PROJECT DOCUMENTATION COVER PAGE
+================================================================================
+
+HIT SERVER-SIDE NODE PROJECT
+Code Review & Documentation Package
+
+Generated: January 12, 2026
+
+================================================================================
+DEVELOPMENT TEAM INFORMATION
+================================================================================
+
+TEAM MANAGER:
+────────────────────────────────────────────────────────────────────────────
+Name:           Elad Hayek
+Position:       Development Team Manager
+
+================================================================================
+TEAM MEMBERS:
+────────────────────────────────────────────────────────────────────────────
+
+TEAM MEMBER 1:
+Name:           Elad Hayek
+ID:             [>>> PLACEHOLDER: INSERT TEAM MEMBER ID <<<]
+Mobile Number:  [>>> PLACEHOLDER: INSERT MOBILE NUMBER <<<]
+Email Address:  [>>> PLACEHOLDER: INSERT EMAIL ADDRESS <<<]
+
+TEAM MEMBER 2:
+Name:           Ofir Zohar
+ID:             [>>> PLACEHOLDER: INSERT TEAM MEMBER ID <<<]
+Mobile Number:  [>>> PLACEHOLDER: INSERT MOBILE NUMBER <<<]
+Email Address:  [>>> PLACEHOLDER: INSERT EMAIL ADDRESS <<<]
+
+TEAM MEMBER 3:
+Name:           Zohar Talab
+ID:             [>>> PLACEHOLDER: INSERT TEAM MEMBER ID <<<]
+Mobile Number:  [>>> PLACEHOLDER: INSERT MOBILE NUMBER <<<]
+Email Address:  [>>> PLACEHOLDER: INSERT EMAIL ADDRESS <<<]
+
+================================================================================
+PROJECT OVERVIEW
+================================================================================
+
+Project Name:   HIT Server-Side Node Project
+Type:           Microservices Architecture
+Technology:    Node.js, Express.js, MongoDB, Mongoose
+Environment:   Node.js CommonJS Module System
+
+This project implements a distributed microservices architecture consisting of
+four independent Node.js services that communicate with each other via HTTP
+APIs. Each service handles a specific domain:
+
+- Admin Service (Port 2000): Team information and administration
+- Users Service (Port 3000): User profile management and validation
+- Costs Service (Port 4000): Expense tracking and cost reporting
+- Logs Service (Port 5000): Centralized logging and monitoring
+
+Services use MongoDB for persistence, Pino for structured logging, and Axios
+for inter-service communication.
+
+================================================================================
+MICROSERVICES ARCHITECTURE
+================================================================================
+
+The project follows a microservices pattern with the following characteristics:
+
+1. Service Independence: Each service has its own database, routes, and
+   business logic
+
+2. Inter-Service Communication: Services communicate via HTTP REST APIs with
+   error handling and timeouts
+
+3. Shared Error Handling: Standardized error classes and error IDs across all
+   services (AppError, ValidationError, NotFoundError, DuplicateError,
+   ServiceError)
+
+4. Centralized Logging: All services send logs to the logs-service for
+   centralized monitoring and audit trails
+
+5. Validation & Consistency: Input validation at service layer with custom
+   error handling and user verification before processing
+
+6. Modular Structure: Controllers → Services → Repositories → Database pattern
+   ensures separation of concerns
+
+Services:
+  ├── admin-service: Team and administrative information
+  ├── users-service: User CRUD operations and user existence checking
+  ├── costs-service: Cost creation, retrieval, and monthly reports
+  └── logs-service: Centralized log storage and retrieval
+
+================================================================================

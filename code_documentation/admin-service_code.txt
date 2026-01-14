@@ -191,10 +191,10 @@ const getTeamMembers = function () {
       first_name: "Ofir",
       last_name: "Zohar",
     },
-    // Team member 3 - Zohar Talab
+    // Team member 3 - Zohar Abramoviz
     {
       first_name: "Zohar",
-      last_name: "Talab",
+      last_name: "Abramoviz",
     },
   ];
 

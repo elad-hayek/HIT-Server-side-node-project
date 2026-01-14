@@ -938,5 +938,530 @@ FILE: users-service/package.json
 }
 
 ================================================================================
+FILE: users-service/tests/unit/users_controller.test.js
+================================================================================
+
+// Users controller unit tests
+// Tests for all controller endpoints: addUser, getUsers, getUserById, checkUserExists
+// Validates HTTP request/response handling and error propagation
+// Mocks service layer for isolated controller testing
+
+// Mock the users service to avoid service layer execution during tests
+jest.mock("../../src/app/services/users_service");
+
+// Import the controller being tested
+const usersController = require("../../src/app/controllers/users_controller");
+// Import mocked dependency for setup and verification
+const usersService = require("../../src/app/services/users_service");
+// Import error classes to verify proper error handling
+const { ValidationError } = require("../../src/errors/validation_error");
+const { NotFoundError } = require("../../src/errors/not_found_error");
+const { DuplicateError } = require("../../src/errors/duplicate_error");
+const { ServiceError } = require("../../src/errors/service_error");
+
+describe("Users Controller", () => {
+  let req;
+  let res;
+  let next;
+
+  beforeEach(() => {
+    req = {
+      body: {},
+      params: {},
+      headers: {},
+      id: "test-request-id",
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    next = jest.fn();
+    jest.clearAllMocks();
+  });
+
+  describe("POST /api/add", () => {
+    it("should create a new user successfully", async () => {
+      const userData = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: "1990-01-01",
+      };
+
+      req.body = userData;
+
+      const expectedUser = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: new Date("1990-01-01"),
+      };
+
+      usersService.addUser.mockResolvedValue(expectedUser);
+
+      await usersController.addUser(req, res, next);
+
+      expect(usersService.addUser).toHaveBeenCalledWith(userData);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(expectedUser);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 when required fields are missing", async () => {
+      req.body = {
+        id: 1,
+        first_name: "John",
+      };
+
+      const validationError = new ValidationError(
+        "Field 'last_name' is required and must be a string"
+      );
+
+      usersService.addUser.mockRejectedValue(validationError);
+
+      await usersController.addUser(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(validationError);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it("should return 409 when user id already exists", async () => {
+      req.body = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: "1990-01-01",
+      };
+
+      const duplicateError = new DuplicateError(
+        "User with id 1 already exists"
+      );
+
+      usersService.addUser.mockRejectedValue(duplicateError);
+
+      await usersController.addUser(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(duplicateError);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("GET /api/users", () => {
+    it("should return array of users", async () => {
+      const users = [
+        {
+          id: 1,
+          first_name: "John",
+          last_name: "Doe",
+          birthday: new Date("1990-01-01"),
+        },
+        {
+          id: 2,
+          first_name: "Jane",
+          last_name: "Smith",
+          birthday: new Date("1992-05-15"),
+        },
+      ];
+
+      usersService.getAllUsers.mockResolvedValue(users);
+
+      await usersController.getUsers(req, res, next);
+
+      expect(usersService.getAllUsers).toHaveBeenCalledWith();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(users);
+      expect(next).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("GET /api/users/:id", () => {
+    it("should return user with total_costs when costs-service responds", async () => {
+      req.params.id = "1";
+
+      const userWithCosts = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: new Date("1990-01-01"),
+        total_costs: 150.5,
+      };
+
+      usersService.getUserById.mockResolvedValue(userWithCosts);
+
+      await usersController.getUserById(req, res, next);
+
+      expect(usersService.getUserById).toHaveBeenCalledWith("1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(userWithCosts);
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("should return 404 when user not found", async () => {
+      req.params.id = "999";
+
+      const notFoundError = new NotFoundError("User with id 999 not found");
+
+      usersService.getUserById.mockRejectedValue(notFoundError);
+
+      await usersController.getUserById(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(notFoundError);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it("should return 503 when costs-service is unavailable", async () => {
+      req.params.id = "1";
+
+      const serviceError = new ServiceError("Costs service unavailable", 503);
+
+      usersService.getUserById.mockRejectedValue(serviceError);
+
+      await usersController.getUserById(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(serviceError);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+  });
+});
+
+================================================================================
+FILE: users-service/tests/unit/users_service.test.js
+================================================================================
+
+// Users service unit tests
+// Tests for all service methods: addUser, getAllUsers, getUserById
+// Validates required fields, duplicate detection, and integration with costs-service
+// Mocks repository and external service calls for isolated testing
+// Uses Jest testing framework with mock functions for dependencies
+
+// Mock the users repository to avoid database calls during tests
+jest.mock("../../src/app/repositories/users_repository");
+// Mock the costs client to avoid inter-service calls during tests
+jest.mock("../../src/clients/costs_client");
+
+// Import the service being tested
+const usersService = require("../../src/app/services/users_service");
+// Import mocked dependencies for setup and verification
+const usersRepository = require("../../src/app/repositories/users_repository");
+const costsClient = require("../../src/clients/costs_client");
+// Import error classes to verify proper error handling
+const { ValidationError } = require("../../src/errors/validation_error");
+const { NotFoundError } = require("../../src/errors/not_found_error");
+const { DuplicateError } = require("../../src/errors/duplicate_error");
+const { ServiceError } = require("../../src/errors/service_error");
+
+describe("Users Service", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("addUser", () => {
+    it("should create user successfully with valid data", async () => {
+      const userData = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: "1990-01-01",
+      };
+
+      const savedUser = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: new Date("1990-01-01"),
+      };
+
+      usersRepository.checkUserExists.mockResolvedValue(false);
+      usersRepository.createUser.mockResolvedValue(savedUser);
+
+      const result = await usersService.addUser(userData);
+
+      expect(usersRepository.checkUserExists).toHaveBeenCalledWith(1);
+      expect(usersRepository.createUser).toHaveBeenCalledWith({
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: expect.any(Date),
+      });
+      expect(result).toEqual({
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: expect.any(Date),
+      });
+    });
+
+    it("should throw ValidationError when id is missing", async () => {
+      const userData = {
+        first_name: "John",
+        last_name: "Doe",
+        birthday: "1990-01-01",
+      };
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        "Field 'id' is required and must be a number"
+      );
+    });
+
+    it("should throw ValidationError when first_name is missing", async () => {
+      const userData = {
+        id: 1,
+        last_name: "Doe",
+        birthday: "1990-01-01",
+      };
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        "Field 'first_name' is required and must be a string"
+      );
+    });
+
+    it("should throw ValidationError when last_name is missing", async () => {
+      const userData = {
+        id: 1,
+        first_name: "John",
+        birthday: "1990-01-01",
+      };
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        "Field 'last_name' is required and must be a string"
+      );
+    });
+
+    it("should throw ValidationError when birthday is missing", async () => {
+      const userData = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+      };
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        "Field 'birthday' is required"
+      );
+    });
+
+    it("should throw ValidationError when birthday is invalid", async () => {
+      const userData = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: "invalid-date",
+      };
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        ValidationError
+      );
+    });
+
+    it("should throw DuplicateError when user id already exists", async () => {
+      const userData = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: "1990-01-01",
+      };
+
+      usersRepository.checkUserExists.mockResolvedValue(true);
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        DuplicateError
+      );
+    });
+
+    it("should throw DuplicateError when mongo returns duplicate key error", async () => {
+      const userData = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: "1990-01-01",
+      };
+
+      usersRepository.checkUserExists.mockResolvedValue(false);
+
+      const dbError = new Error("Duplicate key");
+      dbError.code = 11000;
+      usersRepository.createUser.mockRejectedValue(dbError);
+
+      await expect(usersService.addUser(userData)).rejects.toThrow(
+        DuplicateError
+      );
+    });
+  });
+
+  describe("getAllUsers", () => {
+    it("should return all users", async () => {
+      const users = [
+        {
+          id: 1,
+          first_name: "John",
+          last_name: "Doe",
+          birthday: new Date("1990-01-01"),
+        },
+        {
+          id: 2,
+          first_name: "Jane",
+          last_name: "Smith",
+          birthday: new Date("1992-05-15"),
+        },
+      ];
+
+      usersRepository.findAllUsers.mockResolvedValue(users);
+
+      const result = await usersService.getAllUsers();
+
+      expect(usersRepository.findAllUsers).toHaveBeenCalled();
+      expect(result).toEqual([
+        {
+          id: 1,
+          first_name: "John",
+          last_name: "Doe",
+          birthday: new Date("1990-01-01"),
+        },
+        {
+          id: 2,
+          first_name: "Jane",
+          last_name: "Smith",
+          birthday: new Date("1992-05-15"),
+        },
+      ]);
+    });
+
+    it("should return empty array when no users exist", async () => {
+      usersRepository.findAllUsers.mockResolvedValue([]);
+
+      const result = await usersService.getAllUsers();
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getUserById", () => {
+    it("should return user with total_costs when costs-service responds", async () => {
+      const user = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: new Date("1990-01-01"),
+      };
+
+      usersRepository.findUserById.mockResolvedValue(user);
+      costsClient.getUserTotalCosts.mockResolvedValue(150.5);
+
+      const result = await usersService.getUserById("1");
+
+      expect(usersRepository.findUserById).toHaveBeenCalledWith(1);
+      expect(costsClient.getUserTotalCosts).toHaveBeenCalledWith(1);
+      expect(result).toEqual({
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        total_costs: 150.5,
+      });
+    });
+
+    it("should throw NotFoundError when user does not exist", async () => {
+      usersRepository.findUserById.mockResolvedValue(null);
+
+      await expect(usersService.getUserById("999")).rejects.toThrow(
+        NotFoundError
+      );
+    });
+
+    it("should throw ValidationError when id is not a number", async () => {
+      await expect(usersService.getUserById("abc")).rejects.toThrow(
+        ValidationError
+      );
+    });
+
+    it("should throw ServiceError with 503 when costs-service is unavailable", async () => {
+      const user = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: new Date("1990-01-01"),
+      };
+
+      usersRepository.findUserById.mockResolvedValue(user);
+
+      const error = new Error("connect ECONNREFUSED");
+      error.code = "ECONNREFUSED";
+      costsClient.getUserTotalCosts.mockRejectedValue(error);
+
+      await expect(usersService.getUserById("1")).rejects.toThrow(ServiceError);
+
+      try {
+        await usersService.getUserById("1");
+      } catch (err) {
+        expect(err.status).toBe(503);
+      }
+    });
+
+    it("should throw ServiceError with 503 when costs-service times out", async () => {
+      const user = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: new Date("1990-01-01"),
+      };
+
+      usersRepository.findUserById.mockResolvedValue(user);
+
+      const error = new Error("timeout");
+      error.code = "ETIMEDOUT";
+      costsClient.getUserTotalCosts.mockRejectedValue(error);
+
+      await expect(usersService.getUserById("1")).rejects.toThrow(ServiceError);
+
+      try {
+        await usersService.getUserById("1");
+      } catch (err) {
+        expect(err.status).toBe(503);
+      }
+    });
+
+    it("should throw ServiceError with 502 when costs-service returns error response", async () => {
+      const user = {
+        id: 1,
+        first_name: "John",
+        last_name: "Doe",
+        birthday: new Date("1990-01-01"),
+      };
+
+      usersRepository.findUserById.mockResolvedValue(user);
+
+      const error = new Error("Request failed");
+      error.response = {
+        status: 400,
+        statusText: "Bad Request",
+      };
+      costsClient.getUserTotalCosts.mockRejectedValue(error);
+
+      await expect(usersService.getUserById("1")).rejects.toThrow(ServiceError);
+
+      try {
+        await usersService.getUserById("1");
+      } catch (err) {
+        expect(err.status).toBe(502);
+      }
+    });
+  });
+});
+
+================================================================================
 END OF USERS SERVICE CODE DOCUMENTATION
 ================================================================================

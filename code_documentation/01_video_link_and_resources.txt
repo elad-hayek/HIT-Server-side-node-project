@@ -1,66 +1,8 @@
 ================================================================================
-PROJECT DOCUMENTATION RESOURCES & LINKS
+PROJECT VIDEO
 ================================================================================
-
-VIDEO DOCUMENTATION
-────────────────────────────────────────────────────────────────────────────
-
-Project Demo Video:
 
 [>>> PLACEHOLDER: INSERT VIDEO LINK HERE <<<]
-
-This video demonstrates:
-  - Project architecture overview
-  - Microservices communication flow
-  - API endpoint examples
-  - Database operations
-  - Error handling mechanisms
-  - Testing procedures
-
-How to Use: Click the link above to view the video demonstration in your
-browser. The video should be accessible and playable in all standard video
-formats.
-
-================================================================================
-REPOSITORY INFORMATION
-────────────────────────────────────────────────────────────────────────────
-
-Git Repository:        [>>> PLACEHOLDER: INSERT GIT REPOSITORY URL <<<]
-Default Branch:        main
-Development Branch:    feature/admin-endpoint
-
-Project Location:
-  C:\projects\hit-courses\HIT-Server-side-node-project
-
-================================================================================
-DOCUMENTATION FILES STRUCTURE
-================================================================================
-
-This documentation package includes the following files:
-
-1. 00_cover_page.txt
-   - Project overview and team information
-
-2. 01_video_link_and_resources.txt
-   - Video documentation link and repository information
-
-3. 02_collaborative_tools_summary.txt
-   - Summary of collaborative tools used in development
-
-4. admin-service_code.txt
-   - Complete source code for admin-service
-
-5. costs-service_code.txt
-   - Complete source code for costs-service
-
-6. logs-service_code.txt
-   - Complete source code for logs-service
-
-7. users-service_code.txt
-   - Complete source code for users-service
-
-8. 03_guidelines_and_readme.txt
-   - Project guidelines, setup instructions, and best practices
 
 ================================================================================
 QUICK START GUIDE
@@ -74,7 +16,7 @@ Prerequisites:
 Installation:
 
   1. Navigate to project root:
-     cd C:\projects\hit-courses\HIT-Server-side-node-project
+     cd C:\<YOUR_LOCATION>\HIT-Server-side-node-project
 
   2. Install dependencies for each service:
      cd admin-service && npm install
@@ -103,12 +45,13 @@ Testing:
 
 Environment Variables:
 
-  Each service requires a .env file with the following variables:
+  Each service can have an .env file with the following variables:
     NODE_ENV=development
     PORT=<service-specific-port>
     MONGO_URI=mongodb://localhost:27017/app
     LOGGING_SERVICE_URL=http://localhost:5000/api
     LOGGING_SERVICE_TIMEOUT=3000
+    LOG_LEVEL=info
 
   Additional variables for costs-service:
     USERS_SERVICE_URL=http://localhost:3000/api

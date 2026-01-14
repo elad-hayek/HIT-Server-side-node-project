@@ -18,6 +18,11 @@ const env = {
   // Default 3000 for local development, overridden in production
   PORT: process.env.PORT || 3000,
 
+  // Log level for Pino logger (debug, info, warn, error)
+  // Controls verbosity of application logs
+  // Default info for normal operations, debug for troubleshooting
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
+
   // MongoDB connection URI for users database
   // Format: mongodb://[user:password@]host:port/database
   // Default points to local MongoDB instance

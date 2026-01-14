@@ -558,6 +558,11 @@ const env = {
   // Default 5000 for local development, overridden in production
   PORT: process.env.PORT || 5000,
 
+  // Log level for Pino logger (debug, info, warn, error)
+  // Controls verbosity of application logs
+  // Default info for normal operations, debug for troubleshooting
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
+
   // MongoDB connection URI for logs database
   // Format: mongodb://[user:password@]host:port/database
   // Default points to local MongoDB instance
@@ -589,6 +594,8 @@ FILE: logs-service/src/logging/index.js
 
 // Pino logger configuration
 const pino = require("pino");
+// Import configuration for LOG_LEVEL setting
+const config = require("../config");
 
 // Map Pino numeric levels to string levels for database storage
 const pinoLevelToString = {
@@ -600,10 +607,41 @@ const pinoLevelToString = {
   60: "error", // fatal
 };
 
+// Custom stream to write directly to MongoDB (no external service call)
+const customStream = {
+  write: (msg) => {
+    try {
+      // Parse log message from pino (JSON string)
+      const logObj = JSON.parse(msg);
+      const level = pinoLevelToString[logObj.level] || "info";
+
+      // In the logs service, we just log to MongoDB directly
+      // No external HTTP calls to avoid infinite loops
+
+      const logDoc = new Log({
+        level,
+        message: logObj.msg,
+        timestamp: new Date(logObj.time),
+        method: logObj.req?.method,
+        url: logObj.req?.url,
+        statusCode: logObj.res?.statusCode,
+        responseTime: logObj.responseTime,
+      });
+
+      logDoc.save().catch((err) => {
+        console.error("Failed to save log to MongoDB:", err.message);
+      });
+    } catch (err) {
+      // Fallback: log error to console
+      console.error("Failed to process log:", err.message);
+    }
+  },
+};
+
 const logger = pino(
-  { level: "info" },
+  { level: config.LOG_LEVEL },
   pino.multistream([
-    { level: "info", stream: process.stdout },
+    { level: config.LOG_LEVEL, stream: process.stdout },
   ])
 );
 

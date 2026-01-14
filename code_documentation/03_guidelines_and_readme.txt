@@ -53,11 +53,13 @@ Step 3: Create .env Files (Optional - Uses Defaults)
   admin-service/.env:
     NODE_ENV=development
     PORT=2000
+    LOG_LEVEL=info
     MONGO_URI=mongodb://localhost:27017/app
 
   users-service/.env:
     NODE_ENV=development
     PORT=3000
+    LOG_LEVEL=info
     MONGO_URI=mongodb://localhost:27017/app
     COSTS_SERVICE_URL=http://localhost:4000/api
     LOGGING_SERVICE_URL=http://localhost:5000/api
@@ -65,6 +67,7 @@ Step 3: Create .env Files (Optional - Uses Defaults)
   costs-service/.env:
     NODE_ENV=development
     PORT=4000
+    LOG_LEVEL=info
     MONGO_URI=mongodb://localhost:27017/app
     USERS_SERVICE_URL=http://localhost:3000/api
     LOGGING_SERVICE_URL=http://localhost:5000/api
@@ -72,6 +75,7 @@ Step 3: Create .env Files (Optional - Uses Defaults)
   logs-service/.env:
     NODE_ENV=development
     PORT=5000
+    LOG_LEVEL=info
     MONGO_URI=mongodb://localhost:27017/app
 
 Step 4: Start Each Service in Separate Terminal Windows
@@ -183,8 +187,74 @@ Logs Service (Port 5000)
     POST /api/logs - Create log entry
 
 ================================================================================
-TROUBLESHOOTING
+ENVIRONMENT VARIABLES REFERENCE
 ================================================================================
+
+Available environment variables for each service:
+
+Common Variables (All Services):
+  NODE_ENV           Application environment (development, production)
+                     Default: development
+  
+  PORT                HTTP server port
+                     Defaults: admin=2000, users=3000, costs=4000, logs=5000
+  
+  LOG_LEVEL           Pino logger level (debug, info, warn, error)
+                     Default: info
+                     Use 'debug' for detailed logging during development
+                     Use 'error' for production to reduce log volume
+  
+  MONGO_URI           MongoDB connection string
+                     Default: mongodb://localhost:27017/app
+
+Service-Specific Variables:
+
+  Admin Service:
+    LOGGING_SERVICE_URL        URL to logs-service API
+                               Default: http://localhost:5000/api
+    LOGGING_SERVICE_TIMEOUT    Timeout in ms for logging calls
+                               Default: 3000
+
+  Users Service:
+    COSTS_SERVICE_URL          URL to costs-service API
+    LOGGING_SERVICE_URL        URL to logs-service API
+    COSTS_SERVICE_TIMEOUT      Timeout in ms
+    LOGGING_SERVICE_TIMEOUT    Timeout in ms
+
+  Costs Service:
+    USERS_SERVICE_URL          URL to users-service API
+    LOGGING_SERVICE_URL        URL to logs-service API
+    USERS_SERVICE_TIMEOUT      Timeout in ms
+    LOGGING_SERVICE_TIMEOUT    Timeout in ms
+
+  Logs Service:
+    LOGGING_SERVICE_TIMEOUT    Timeout in ms for internal operations
+
+================================================================================
+LOGGING CONFIGURATION
+================================================================================
+
+Each service uses Pino for structured logging with configurable levels.
+
+Log Levels (in order of verbosity):
+  debug    - Detailed debugging information (most verbose)
+  info     - General informational messages (default)
+  warn     - Warning messages for potential issues
+  error    - Error messages and stack traces (most restrictive)
+
+Set LOG_LEVEL environment variable to control what gets logged:
+
+  Production:  LOG_LEVEL=error   (minimal logs, best performance)
+  Development: LOG_LEVEL=debug   (detailed logs for troubleshooting)
+  Default:     LOG_LEVEL=info    (balanced for general use)
+
+Example - Run with debug logging:
+  LOG_LEVEL=debug npm run dev
+
+Log Output Destinations:
+  - stdout (console) - Real-time viewing
+  - Logging Service - Centralized log storage in MongoDB
+  - logs-service stores all logs for future querying
 
 Issue: "MongoDB connection error"
   Solution: Make sure MongoDB is running (mongod command)

@@ -906,6 +906,8 @@ const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
   // HTTP server port for listening
   PORT: process.env.PORT || 4000,
+  // Log level for Pino logger (debug, info, warn, error)
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
   // MongoDB connection string for database
   MONGO_URI: process.env.MONGO_URI || "mongodb://localhost:27017/app",
   // External users service base URL for validation
@@ -1274,6 +1276,8 @@ FILE: costs-service/src/logging/index.js
 // Pino logger configuration with MongoDB stream
 const pino = require("pino");
 const loggingClient = require("../clients/logging_client");
+// Import configuration for LOG_LEVEL setting
+const config = require("../config");
 
 // Map Pino numeric levels to string levels for database storage
 const pinoLevelToString = {
@@ -1309,12 +1313,11 @@ const customStream = {
     }
   },
 };
-
 const logger = pino(
-  { level: "info" },
+  { level: config.LOG_LEVEL },
   pino.multistream([
-    { level: "info", stream: process.stdout },
-    { level: "info", stream: customStream },
+    { level: config.LOG_LEVEL, stream: process.stdout },
+    { level: config.LOG_LEVEL, stream: customStream },
   ])
 );
 

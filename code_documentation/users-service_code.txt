@@ -709,6 +709,11 @@ const env = {
   // Default 3000 for local development, overridden in production
   PORT: process.env.PORT || 3000,
 
+  // Log level for Pino logger (debug, info, warn, error)
+  // Controls verbosity of application logs
+  // Default info for normal operations, debug for troubleshooting
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
+
   // MongoDB connection URI for users database
   // Format: mongodb://[user:password@]host:port/database
   // Default points to local MongoDB instance
@@ -850,6 +855,8 @@ FILE: users-service/src/logging/index.js
 // Pino logger configuration
 const pino = require("pino");
 const loggingClient = require("../clients/logging_client");
+// Import configuration for LOG_LEVEL setting
+const config = require("../config");
 
 // Map Pino numeric levels to string levels for database storage
 const pinoLevelToString = {
@@ -884,10 +891,10 @@ const customStream = {
 };
 
 const logger = pino(
-  { level: "info" },
+  { level: config.LOG_LEVEL },
   pino.multistream([
-    { level: "info", stream: process.stdout },
-    { level: "info", stream: customStream },
+    { level: config.LOG_LEVEL, stream: process.stdout },
+    { level: config.LOG_LEVEL, stream: customStream },
   ])
 );
 

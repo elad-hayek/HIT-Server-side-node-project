@@ -1,6 +1,8 @@
 // Pino logger configuration with MongoDB stream
 const pino = require("pino");
 const loggingClient = require("../clients/logging_client");
+// Import configuration for LOG_LEVEL setting
+const config = require("../config");
 
 // Map Pino numeric levels to string levels for database storage
 const pinoLevelToString = {
@@ -38,10 +40,10 @@ const customStream = {
 };
 
 const logger = pino(
-  { level: "info" },
+  { level: config.LOG_LEVEL },
   pino.multistream([
-    { level: "info", stream: process.stdout },
-    { level: "info", stream: customStream },
+    { level: config.LOG_LEVEL, stream: process.stdout },
+    { level: config.LOG_LEVEL, stream: customStream },
   ])
 );
 

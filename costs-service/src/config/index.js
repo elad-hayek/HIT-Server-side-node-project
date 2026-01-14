@@ -9,6 +9,8 @@ const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
   // HTTP server port for listening
   PORT: process.env.PORT || 4000,
+  // Log level for Pino logger (debug, info, warn, error)
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
   // MongoDB connection string for database
   MONGO_URI: process.env.MONGO_URI || "mongodb://localhost:27017/app",
   // External users service base URL for validation

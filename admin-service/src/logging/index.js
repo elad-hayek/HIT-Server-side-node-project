@@ -4,6 +4,8 @@
 const pino = require("pino");
 // Import logging client for sending logs to external service
 const loggingClient = require("../clients/logging_client");
+// Import configuration for LOG_LEVEL setting
+const config = require("../config");
 
 // Map Pino numeric log levels to string representations for storage
 const pinoLevelToString = {
@@ -59,14 +61,14 @@ const customStream = {
 
 // Create Pino logger with console and custom stream outputs
 const logger = pino(
-  // Configure base logger with info level
-  { level: "info" },
+  // Configure base logger with configurable log level
+  { level: config.LOG_LEVEL },
   // Use multiple output streams simultaneously
   pino.multistream([
     // Stream 1: Output to standard output (console)
-    { level: "info", stream: process.stdout },
+    { level: config.LOG_LEVEL, stream: process.stdout },
     // Stream 2: Output to custom logging service client
-    { level: "info", stream: customStream },
+    { level: config.LOG_LEVEL, stream: customStream },
   ])
 );
 
